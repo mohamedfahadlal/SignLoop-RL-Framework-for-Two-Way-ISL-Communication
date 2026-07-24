@@ -1,0 +1,14 @@
+# Virtual environment
+isl_venv/
+
+# Large datasets & raw files
+dataset/
+*.MOV
+*.mov
+*.MP4
+*.mp4
+*.npz
+
+# Python cache
+__pycache__/
+.pytest_cache/
