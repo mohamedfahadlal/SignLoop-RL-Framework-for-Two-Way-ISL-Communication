@@ -1,66 +1,60 @@
-"""
-Run this AFTER unzipping the Zenodo videos into data/raw_include/.
-
-It does two things:
-1. Pulls the authoritative metadata (parent_label, label, video_path, include_50)
-   from the Hugging Face parquet — this is your ground-truth label source,
-   more reliable than trusting folder names.
-2. Checks how many of those video_paths actually exist on disk, and reports
-   any path-prefix mismatch (the most common issue after unzipping Zenodo files).
-"""
-
-import pandas as pd
 from pathlib import Path
+import pandas as pd
 
-RAW_DATA_DIR = Path("dataset/data/raw_include")   # adjust if your unzip landed elsewhere
-INCLUDE_50_ONLY = True                     # set False if you're using the full 263-word set
+# 1. Update Path to match your actual directory layout
+RAW_DATA_DIR = Path("datasets/data/raw_include") 
 MANIFEST_OUT = Path("dataset/data/include_manifest.csv")
 
-'''
-HF_PARQUET_URL = (
-    "hf://datasets/ai4bharat/INCLUDE/default/train-00000-of-00001.parquet"
-)'''
+# Ensure destination folder exists
+MANIFEST_OUT.parent.mkdir(parents=True, exist_ok=True)
 
+TARGET_CATEGORIES = ["Jobs", "Means of Transportation", "People", "Places"]
 
 def load_metadata() -> pd.DataFrame:
     from datasets import load_dataset
     
-    # This officially connects to Hugging Face and downloads the metadata safely
     print("Downloading metadata from Hugging Face...")
     dataset = load_dataset("ai4bharat/INCLUDE", split="train")
     df = dataset.to_pandas()
     
-    if INCLUDE_50_ONLY:
-        df = df[df["include_50"] == True].reset_index(drop=True)
+    # Clean category names for consistent matching
+    df["parent_label_clean"] = df["parent_label"].str.replace("_", " ")
+    target_clean = [cat.replace("_", " ") for cat in TARGET_CATEGORIES]
+    
+    # Filter metadata strictly to your 4 downloaded categories
+    df = df[df["parent_label_clean"].isin(target_clean)].reset_index(drop=True)
     return df
 
 def index_local_videos(root: Path) -> dict:
     """
-    Map (word_folder, filename) -> actual resolved Path, regardless of which
-    zip-wrapper folder it landed in (e.g. 'Adjectives_1of8'). This makes the
-    match robust to the extra nesting confirmed in this project's download.
+    Map (word_folder, filename) -> actual resolved Path.
+    Handles videos nested inside 'Extra' subfolders.
     """
     index = {}
     dupes = 0
     for ext in ("*.MOV", "*.mov", "*.MP4", "*.mp4"):
         for p in root.rglob(ext):
-            key = (p.parent.name, p.name)   # e.g. ("1. loud", "MVI_5177.MOV")
+            # If inside an 'Extra' folder, take the grandparent folder name (e.g. '19. House')
+            parent_name = p.parent.parent.name if p.parent.name == "Extra" else p.parent.name
+            key = (parent_name, p.name)
+            
             if key in index:
                 dupes += 1
             index[key] = p
+            
     if dupes:
-        print(f"Warning: {dupes} filename collisions across different wrapper folders.")
+        print(f"Warning: {dupes} duplicate filename collisions found.")
     return index
-
 
 def check_files_exist(df: pd.DataFrame, index: dict) -> pd.DataFrame:
     resolved_paths, statuses = [], []
 
     for vp in df["video_path"]:
-        # vp looks like "Adjectives/1. loud/MVI_5177.MOV" -> take last 2 parts
         parts = Path(vp).parts
+        # parts[-2] is the word folder (e.g., '1. loud'), parts[-1] is the video filename
         key = (parts[-2], parts[-1])
         match = index.get(key)
+        
         resolved_paths.append(str(match) if match else None)
         statuses.append("found" if match else "missing")
 
@@ -70,29 +64,27 @@ def check_files_exist(df: pd.DataFrame, index: dict) -> pd.DataFrame:
 
     n_found = (df["status"] == "found").sum()
     n_missing = (df["status"] == "missing").sum()
-    print(f"Total rows checked: {len(df)}")
-    print(f"Found on disk:      {n_found}")
-    print(f"Missing:            {n_missing}")
+    print(f"Total rows checked in scope: {len(df)}")
+    print(f"Found on disk:               {n_found}")
+    print(f"Missing:                     {n_missing}")
 
     if n_missing:
         print("\nFirst few missing (word, filename) pairs:")
         missing_df = df[df["status"] == "missing"]
         for vp in missing_df["video_path"].head(5):
             print(" ", vp)
-        print("\nIf this is a large fraction, double check the zip extracted the")
-        print("category you expect, or that MOV vs MP4 extensions aren't mixed up.")
 
     return df
 
-
 if __name__ == "__main__":
     df = load_metadata()
-    print(df.head())
-    print("\nUnique words in scope:", df["label"].nunique())
+    print(f"Unique target words in scope: {df['label'].nunique()}")
 
     index = index_local_videos(RAW_DATA_DIR)
-    print(f"Indexed {len(index)} local video files across all wrapper folders.")
+    print(f"Indexed {len(index)} local video files across target folders.")
 
     result = check_files_exist(df, index)
+    
+    # Save output (Make sure include_manifest.csv is closed in Excel/VS Code)
     result.to_csv(MANIFEST_OUT, index=False)
-    print(f"\nManifest written to {MANIFEST_OUT} — data_prep.py reads resolved_path from here.")
+    print(f"\nManifest successfully written to {MANIFEST_OUT}")
