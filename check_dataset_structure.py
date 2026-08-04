@@ -13,7 +13,7 @@ import pandas as pd
 from pathlib import Path
 
 RAW_DATA_DIR = Path("dataset/data/raw_include")   # adjust if your unzip landed elsewhere
-INCLUDE_50_ONLY = True                     # set False if you're using the full 263-word set
+INCLUDE_50_ONLY = False                 # set False if you're using the full 263-word set
 MANIFEST_OUT = Path("dataset/data/include_manifest.csv")
 
 '''
