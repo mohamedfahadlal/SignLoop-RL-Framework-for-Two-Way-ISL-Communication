@@ -5,19 +5,26 @@ whether each metadata entry resolves to a local video file.
 """
 
 import re
-from pathlib import Path
 
+from pathlib import Path
 import pandas as pd
+
 
 from pathlib import Path
 import pandas as pd
 
 RAW_DATA_DIR = Path("dataset/data/raw_include")  # adjust if your unzip landed elsewhere
 MANIFEST_OUT = Path("dataset/data/include_manifest.csv")
+=======
+# 1. Update Path to match your actual directory layout
+RAW_DATA_DIR = Path("datasets/data/raw_include") 
+MANIFEST_OUT = Path("dataset/data/include_manifest.csv")
 
 # Ensure destination folder exists
 MANIFEST_OUT.parent.mkdir(parents=True, exist_ok=True)
 
+TARGET_CATEGORIES = ["Jobs", "Means of Transportation", "People", "Places"]
+>>>>>>> a3be024 (Update check_dataset_structure.py)
 
 def load_metadata() -> pd.DataFrame:
     from datasets import load_dataset
@@ -26,9 +33,16 @@ def load_metadata() -> pd.DataFrame:
     dataset = load_dataset("ai4bharat/INCLUDE", split="train")
     df = dataset.to_pandas()
     
-    # Full INCLUDE dataset: keep all 263 words; downstream code can filter if needed.
+    # Clean category names for consistent matching
+    df["parent_label_clean"] = df["parent_label"].str.replace("_", " ")
+    target_clean = [cat.replace("_", " ") for cat in TARGET_CATEGORIES]
+    
+    # Filter metadata strictly to your 4 downloaded categories
+    df = df[df["parent_label_clean"].isin(target_clean)].reset_index(drop=True)
+
     return df
 
+>>>>>>> a3be024 (Update check_dataset_structure.py)
     return df
 
 
@@ -40,22 +54,16 @@ def normalize_string(s: str) -> str:
 def index_local_videos(root: Path) -> dict:
     """
     Map (word_folder, filename) -> actual resolved Path.
-    Handles videos nested under 'Extra' folders, while skipping
-    macOS metadata clutter and duplicate filename collisions.
+    Handles videos nested inside 'Extra' subfolders.
     """
+    dupes = 0
 
     index = {}
-    for ext in ("*.MOV", "*.mov", "*.MP4", "*.mp4"):
-        for p in root.rglob(ext):
-    index = {}
-    dupes = 0
     for ext in ("*.MOV", "*.mov", "*.MP4", "*.mp4"):
         for p in root.rglob(ext):
             if "__MACOSX" in p.parts or p.name.startswith("._"):
                 continue
-
-            # If a clip is nested under an 'Extra' folder, use the grandparent label;
-            # otherwise use the immediate parent folder name.
+            # If inside an 'Extra' folder, take the grandparent folder name (e.g. '19. House')
             parent_name = p.parent.parent.name if p.parent.name == "Extra" else p.parent.name
             key = (parent_name, p.name)
 
@@ -66,11 +74,9 @@ def index_local_videos(root: Path) -> dict:
     if dupes:
         print(f"Warning: {dupes} duplicate filename collisions found.")
 
-    print(f"Indexed {len(index)} local video files.")
     return index
 
-    return index
-
+>>>>>>> a3be024 (Update check_dataset_structure.py)
 def check_files_exist(df: pd.DataFrame, index: dict) -> pd.DataFrame:
     resolved_paths, statuses = [], []
 
@@ -129,17 +135,20 @@ def check_files_exist(df: pd.DataFrame, index: dict) -> pd.DataFrame:
         for vp in missing_df["video_path"].head(5):
             print(" ", vp)
 
+>>>>>>> a3be024 (Update check_dataset_structure.py)
     return df
 
 if __name__ == "__main__":
     df = load_metadata()
-    print(f"\nUnique words in scope: {df['label'].nunique()}")
+    print(f"\nUnique target words in scope: {df['label'].nunique()}")
 
     index = index_local_videos(RAW_DATA_DIR)
+    print(f"Indexed {len(index)} local video files across target folders.")
 
     result = check_files_exist(df, index)
 
     # Save the manifest for data_prep.py to use
     result.to_csv(MANIFEST_OUT, index=False)
-    print(f"\nManifest written to {MANIFEST_OUT} — data_prep.py reads resolved_path from here.")
+    print(f"\nManifest successfully written to {MANIFEST_OUT}")
 
+>>>>>>> a3be024 (Update check_dataset_structure.py)
