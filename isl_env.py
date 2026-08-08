@@ -109,43 +109,44 @@ class ISLEnv(gym.Env):
 
 if __name__ == "__main__":
 
-    
-    # Ensure the root directory is in the path so we can import the policy
-    ROOT_DIR = Path(__file__).resolve().parent
-    if str(ROOT_DIR) not in sys.path:
-        sys.path.insert(0, str(ROOT_DIR))
-        
+    for i in range (100):
+        # Ensure the root directory is in the path so we can import the policy
+        ROOT_DIR = Path(__file__).resolve().parent
+        if str(ROOT_DIR) not in sys.path:
+            sys.path.insert(0, str(ROOT_DIR))
+            
 
-    
-    env = ISLEnv()
-    initial_state, _ = env.reset()
-    print(f"\nState matrix shape successfully loaded as: {initial_state.shape}")
-    
-    # 1. Set up the device and initialize the policy network
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    policy = ISLPolicyNetwork(input_dim=225, num_classes=env.action_space.n).to(device)
-    
-    # 2. Load the trained weights saved by train_policy.py
-    model_path = Path("models/isl_policy_model.pth")
-    if model_path.exists():
-        policy.load_state_dict(torch.load(model_path, map_location=device))
-        print(f"Successfully loaded trained policy from {model_path}!")
-        policy.eval() # Set to evaluation mode for inference
-    else:
-        print(f"Warning: No trained model found at {model_path}. Using randomized untrained weights.")
-    
+        
+        env = ISLEnv()
+        initial_state, _ = env.reset()
+        print(f"\nState matrix shape successfully loaded as: {initial_state.shape}")
+        
+        # 1. Set up the device and initialize the policy network
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        policy = ISLPolicyNetwork(input_dim=225, num_classes=env.action_space.n).to(device)
+        
+        # 2. Load the trained weights saved by train_policy.py
+        model_path = Path("models/isl_policy_model.pth")
+        if model_path.exists():
+            policy.load_state_dict(torch.load(model_path, map_location=device))
+            print(f"Successfully loaded trained policy from {model_path}!")
+            policy.eval() # Set to evaluation mode for inference
+        else:
+            print(f"Warning: No trained model found at {model_path}. Using randomized untrained weights.")
+        
     # 3. Get the action from the policy using get_action()
     # The get_action method returns a tuple: (action_item, log_prob)
-    with torch.no_grad():
-        action, _ = policy.get_action(initial_state, temperature=1.0, device=device)
     
-    # 4. Step the environment using the policy's chosen action
-    next_state, step_reward, done, truncated, info = env.step(action)
-    
-    # 5. Print the results using the correct keys from your updated info dictionary
-    print("\n--- Translation Results ---")
-    print(f"Agent guessed: '{info.get('predicted_text')}' (ID: {info.get('guessed_word_id')})")
-    print(f"Actual text  : '{info.get('correct_text')}' (ID: {info.get('expected_word_id')})")
-    print(f"Total Reward : {step_reward:.4f}")
-    print(f"  -> Accuracy Score: {info.get('accuracy_score'):.4f}") 
-    print(f"  -> Length Penalty: {info.get('length_penalty'):.4f}")
+        with torch.no_grad():
+            action, _ = policy.get_action(initial_state, temperature=1.0, device=device)
+        
+        # 4. Step the environment using the policy's chosen action
+        next_state, step_reward, done, truncated, info = env.step(action)
+        
+        # 5. Print the results using the correct keys from your updated info dictionary
+        print("\n--- Translation Results ---")
+        print(f"Agent guessed: '{info.get('predicted_text')}' (ID: {info.get('guessed_word_id')})")
+        print(f"Actual text  : '{info.get('correct_text')}' (ID: {info.get('expected_word_id')})")
+        print(f"Total Reward : {step_reward:.4f}")
+        print(f"  -> Accuracy Score: {info.get('accuracy_score'):.4f}") 
+        print(f"  -> Length Penalty: {info.get('length_penalty'):.4f}")
