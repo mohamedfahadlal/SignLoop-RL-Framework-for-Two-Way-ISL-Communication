@@ -3,6 +3,7 @@ import pandas as pd
 
 # 1. Update Path to match your actual directory layout
 RAW_DATA_DIR = Path("datasets/data/raw_include") 
+INCLUDE_50_ONLY=False
 MANIFEST_OUT = Path("dataset/data/include_manifest.csv")
 
 # Ensure destination folder exists
