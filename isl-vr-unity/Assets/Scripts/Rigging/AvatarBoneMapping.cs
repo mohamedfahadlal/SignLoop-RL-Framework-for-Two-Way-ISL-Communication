@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace SignLoop.Rigging
@@ -5,6 +7,7 @@ namespace SignLoop.Rigging
     /// <summary>
     /// Component placed on avatar prefabs (or auto-generated) that maps skeleton transforms
     /// to standard ISL procedural animation hooks. Decouples the 3D model from the rig controllers.
+    /// Supports both Unity Humanoid auto-detection and name-based hierarchy fallback.
     /// </summary>
     [DisallowMultipleComponent]
     public class AvatarBoneMapping : MonoBehaviour
@@ -42,17 +45,48 @@ namespace SignLoop.Rigging
         public Transform[] rightHandBones = new Transform[JointCountPerHand];
 
         /// <summary>
-        /// Attempts to auto-detect bone transforms from a Unity Humanoid Animator.
+        /// Attempts to auto-detect bone transforms from Humanoid Animator or named hierarchy fallback.
         /// </summary>
         public bool AutoPopulate(Animator animator)
         {
-            if (animator == null || !animator.isHuman)
+            bool mappedViaHumanoid = false;
+
+            if (animator != null && animator.isHuman)
             {
-                Debug.LogWarning("[AvatarBoneMapping] Cannot auto-populate: Animator is missing or not configured as Humanoid.");
-                return false;
+                mappedViaHumanoid = TryPopulateFromHumanoid(animator);
             }
 
-            // Arms
+            if (!mappedViaHumanoid)
+            {
+                Debug.Log("[AvatarBoneMapping] Humanoid mapping unavailable; executing name-based hierarchy fallback.");
+                PopulateByName(transform);
+            }
+
+            // Auto-detect face mesh if null
+            if (faceMesh == null)
+            {
+                var smrs = GetComponentsInChildren<SkinnedMeshRenderer>();
+                for (int i = 0; i < smrs.Length; i++)
+                {
+                    if (smrs[i].sharedMesh != null && smrs[i].sharedMesh.blendShapeCount > 0)
+                    {
+                        faceMesh = smrs[i];
+                        break;
+                    }
+                }
+                // Fallback: pick body mesh even if 0 blendshapes
+                if (faceMesh == null && smrs.Length > 0)
+                {
+                    faceMesh = smrs[0];
+                }
+            }
+
+            Debug.Log($"[AvatarBoneMapping] Mapping complete. FaceMesh: {(faceMesh != null ? faceMesh.name : "None")}, LeftArm: {(leftUpperArm != null ? "Bound" : "Missing")}, RightArm: {(rightUpperArm != null ? "Bound" : "Missing")}.");
+            return leftUpperArm != null && rightUpperArm != null;
+        }
+
+        private bool TryPopulateFromHumanoid(Animator animator)
+        {
             leftUpperArm = animator.GetBoneTransform(HumanBodyBones.LeftUpperArm);
             leftForearm = animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
             leftHand = animator.GetBoneTransform(HumanBodyBones.LeftHand);
@@ -61,7 +95,7 @@ namespace SignLoop.Rigging
             rightForearm = animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
             rightHand = animator.GetBoneTransform(HumanBodyBones.RightHand);
 
-            // Left Hand Joints
+            // Left Hand
             leftHandBones[Wrist] = leftHand;
             leftHandBones[ThumbCMC] = animator.GetBoneTransform(HumanBodyBones.LeftThumbProximal);
             leftHandBones[ThumbMCP] = animator.GetBoneTransform(HumanBodyBones.LeftThumbIntermediate);
@@ -93,7 +127,7 @@ namespace SignLoop.Rigging
             if (leftHandBones[PinkyDIP] != null && leftHandBones[PinkyDIP].childCount > 0)
                 leftHandBones[PinkyTip] = leftHandBones[PinkyDIP].GetChild(0);
 
-            // Right Hand Joints
+            // Right Hand
             rightHandBones[Wrist] = rightHand;
             rightHandBones[ThumbCMC] = animator.GetBoneTransform(HumanBodyBones.RightThumbProximal);
             rightHandBones[ThumbMCP] = animator.GetBoneTransform(HumanBodyBones.RightThumbIntermediate);
@@ -125,22 +159,89 @@ namespace SignLoop.Rigging
             if (rightHandBones[PinkyDIP] != null && rightHandBones[PinkyDIP].childCount > 0)
                 rightHandBones[PinkyTip] = rightHandBones[PinkyDIP].GetChild(0);
 
-            // Auto-detect face mesh if null
-            if (faceMesh == null)
+            return leftUpperArm != null && rightUpperArm != null;
+        }
+
+        private void PopulateByName(Transform root)
+        {
+            var dict = new Dictionary<string, Transform>(StringComparer.OrdinalIgnoreCase);
+            CollectTransforms(root, dict);
+
+            leftUpperArm = FindInDict(dict, "LeftArm", "LeftUpperArm", "left_arm");
+            leftForearm = FindInDict(dict, "LeftForeArm", "LeftLowerArm", "left_forearm");
+            leftHand = FindInDict(dict, "LeftHand", "LeftWrist", "left_hand");
+
+            rightUpperArm = FindInDict(dict, "RightArm", "RightUpperArm", "right_arm");
+            rightForearm = FindInDict(dict, "RightForeArm", "RightLowerArm", "right_forearm");
+            rightHand = FindInDict(dict, "RightHand", "RightWrist", "right_hand");
+
+            // Left Fingers
+            leftHandBones[Wrist] = leftHand;
+            leftHandBones[ThumbCMC] = FindInDict(dict, "LeftHandThumb1", "LeftThumbProximal");
+            leftHandBones[ThumbMCP] = FindInDict(dict, "LeftHandThumb2", "LeftThumbIntermediate");
+            leftHandBones[ThumbIP] = FindInDict(dict, "LeftHandThumb3", "LeftThumbDistal");
+
+            leftHandBones[IndexMCP] = FindInDict(dict, "LeftHandIndex1", "LeftIndexProximal");
+            leftHandBones[IndexPIP] = FindInDict(dict, "LeftHandIndex2", "LeftIndexIntermediate");
+            leftHandBones[IndexDIP] = FindInDict(dict, "LeftHandIndex3", "LeftIndexDistal");
+
+            leftHandBones[MiddleMCP] = FindInDict(dict, "LeftHandMiddle1", "LeftMiddleProximal");
+            leftHandBones[MiddlePIP] = FindInDict(dict, "LeftHandMiddle2", "LeftMiddleIntermediate");
+            leftHandBones[MiddleDIP] = FindInDict(dict, "LeftHandMiddle3", "LeftMiddleDistal");
+
+            leftHandBones[RingMCP] = FindInDict(dict, "LeftHandRing1", "LeftRingProximal");
+            leftHandBones[RingPIP] = FindInDict(dict, "LeftHandRing2", "LeftRingIntermediate");
+            leftHandBones[RingDIP] = FindInDict(dict, "LeftHandRing3", "LeftRingDistal");
+
+            leftHandBones[PinkyMCP] = FindInDict(dict, "LeftHandPinky1", "LeftLittleProximal");
+            leftHandBones[PinkyPIP] = FindInDict(dict, "LeftHandPinky2", "LeftLittleIntermediate");
+            leftHandBones[PinkyDIP] = FindInDict(dict, "LeftHandPinky3", "LeftLittleDistal");
+
+            // Right Fingers
+            rightHandBones[Wrist] = rightHand;
+            rightHandBones[ThumbCMC] = FindInDict(dict, "RightHandThumb1", "RightThumbProximal");
+            rightHandBones[ThumbMCP] = FindInDict(dict, "RightHandThumb2", "RightThumbIntermediate");
+            rightHandBones[ThumbIP] = FindInDict(dict, "RightHandThumb3", "RightThumbDistal");
+
+            rightHandBones[IndexMCP] = FindInDict(dict, "RightHandIndex1", "RightIndexProximal");
+            rightHandBones[IndexPIP] = FindInDict(dict, "RightHandIndex2", "RightIndexIntermediate");
+            rightHandBones[IndexDIP] = FindInDict(dict, "RightHandIndex3", "RightIndexDistal");
+
+            rightHandBones[MiddleMCP] = FindInDict(dict, "RightHandMiddle1", "RightMiddleProximal");
+            rightHandBones[MiddlePIP] = FindInDict(dict, "RightHandMiddle2", "RightMiddleIntermediate");
+            rightHandBones[MiddleDIP] = FindInDict(dict, "RightHandMiddle3", "RightMiddleDistal");
+
+            rightHandBones[RingMCP] = FindInDict(dict, "RightHandRing1", "RightRingProximal");
+            rightHandBones[RingPIP] = FindInDict(dict, "RightHandRing2", "RightRingIntermediate");
+            rightHandBones[RingDIP] = FindInDict(dict, "RightHandRing3", "RightRingDistal");
+
+            rightHandBones[PinkyMCP] = FindInDict(dict, "RightHandPinky1", "RightLittleProximal");
+            rightHandBones[PinkyPIP] = FindInDict(dict, "RightHandPinky2", "RightLittleIntermediate");
+            rightHandBones[PinkyDIP] = FindInDict(dict, "RightHandPinky3", "RightLittleDistal");
+        }
+
+        private static void CollectTransforms(Transform current, Dictionary<string, Transform> dict)
+        {
+            if (!dict.ContainsKey(current.name))
             {
-                var smrs = animator.GetComponentsInChildren<SkinnedMeshRenderer>();
-                for (int i = 0; i < smrs.Length; i++)
+                dict.Add(current.name, current);
+            }
+            for (int i = 0; i < current.childCount; i++)
+            {
+                CollectTransforms(current.GetChild(i), dict);
+            }
+        }
+
+        private static Transform FindInDict(Dictionary<string, Transform> dict, params string[] candidates)
+        {
+            for (int i = 0; i < candidates.Length; i++)
+            {
+                if (dict.TryGetValue(candidates[i], out var t))
                 {
-                    if (smrs[i].sharedMesh != null && smrs[i].sharedMesh.blendShapeCount > 10)
-                    {
-                        faceMesh = smrs[i];
-                        break;
-                    }
+                    return t;
                 }
             }
-
-            Debug.Log("[AvatarBoneMapping] Auto-population completed successfully.");
-            return true;
+            return null;
         }
     }
 }

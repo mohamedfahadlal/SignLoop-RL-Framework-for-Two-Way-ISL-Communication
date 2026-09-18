@@ -15,6 +15,7 @@ namespace SignLoop.Rigging
         [SerializeField] private ArmIKController armIK;
         [SerializeField] private HandPoseController handPose;
         [SerializeField] private ARKitFaceController faceController;
+        [SerializeField] private ISLSignPlayer signPlayer;
 
         [Header("Avatar Container & Instance")]
         [Tooltip("Transform slot where the avatar mesh prefab is parented.")]
@@ -26,20 +27,13 @@ namespace SignLoop.Rigging
         public ArmIKController ArmIK => armIK;
         public HandPoseController HandPose => handPose;
         public ARKitFaceController FaceController => faceController;
+        public ISLSignPlayer SignPlayer => signPlayer;
         public GameObject CurrentAvatar => currentAvatar;
 
         private void Awake()
         {
             EnsureDependencies();
-
-            if (currentAvatar != null)
-            {
-                BindAvatar(currentAvatar);
-            }
-            else if (avatarSlot != null && avatarSlot.childCount > 0)
-            {
-                BindAvatar(avatarSlot.GetChild(0).gameObject);
-            }
+            AutoBind();
         }
 
         private void EnsureDependencies()
@@ -47,7 +41,64 @@ namespace SignLoop.Rigging
             if (armIK == null) armIK = GetComponentInChildren<ArmIKController>();
             if (handPose == null) handPose = GetComponentInChildren<HandPoseController>();
             if (faceController == null) faceController = GetComponentInChildren<ARKitFaceController>();
-            if (avatarSlot == null) avatarSlot = transform;
+            if (signPlayer == null) signPlayer = GetComponentInChildren<ISLSignPlayer>();
+            if (avatarSlot == null)
+            {
+                var slotTrans = transform.Find("AvatarSlot");
+                avatarSlot = (slotTrans != null) ? slotTrans : transform;
+            }
+        }
+
+        /// <summary>
+        /// Finds and binds the avatar model within the slot or children.
+        /// </summary>
+        public void AutoBind()
+        {
+            GameObject target = currentAvatar;
+
+            // If currentAvatar is missing or is the empty AvatarSlot container, find the real model inside
+            if (target == null || target.name == "AvatarSlot" || target == gameObject)
+            {
+                target = FindActualAvatarModel();
+            }
+
+            if (target != null)
+            {
+                BindAvatar(target);
+            }
+            else
+            {
+                Debug.LogWarning("[AvatarRigWrapper] No avatar model found under avatarSlot or children.");
+            }
+        }
+
+        private GameObject FindActualAvatarModel()
+        {
+            Transform container = (avatarSlot != null && avatarSlot != transform) ? avatarSlot : transform;
+
+            // 1. Check direct children of container
+            for (int i = 0; i < container.childCount; i++)
+            {
+                var child = container.GetChild(i);
+                if (child.name != "AvatarSlot" && (child.GetComponentInChildren<SkinnedMeshRenderer>() != null || child.GetComponentInChildren<Animator>() != null))
+                {
+                    return child.gameObject;
+                }
+            }
+
+            // 2. Search all SkinnedMeshRenderers
+            var smrs = container.GetComponentsInChildren<SkinnedMeshRenderer>();
+            for (int i = 0; i < smrs.Length; i++)
+            {
+                Transform t = smrs[i].transform;
+                while (t.parent != null && t.parent != container && t.parent != transform)
+                {
+                    t = t.parent;
+                }
+                return t.gameObject;
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -85,6 +136,12 @@ namespace SignLoop.Rigging
         {
             if (avatarInstance == null) return false;
 
+            // If passed the container itself, drill down to the actual model
+            if (avatarInstance.name == "AvatarSlot" && avatarInstance.transform.childCount > 0)
+            {
+                avatarInstance = avatarInstance.transform.GetChild(0).gameObject;
+            }
+
             currentAvatar = avatarInstance;
 
             // Retrieve or create AvatarBoneMapping
@@ -92,12 +149,13 @@ namespace SignLoop.Rigging
             if (mapping == null)
             {
                 mapping = currentAvatar.AddComponent<AvatarBoneMapping>();
-                var animator = currentAvatar.GetComponent<Animator>();
-                if (animator != null)
-                {
-                    mapping.AutoPopulate(animator);
-                }
             }
+
+            var animator = currentAvatar.GetComponent<Animator>();
+            if (animator == null) animator = currentAvatar.GetComponentInParent<Animator>();
+            if (animator == null) animator = GetComponent<Animator>();
+
+            mapping.AutoPopulate(animator);
 
             bool allBound = true;
 
@@ -130,7 +188,7 @@ namespace SignLoop.Rigging
                 handPose.BindHands(mapping.leftHandBones, mapping.rightHandBones);
             }
 
-            Debug.Log($"[AvatarRigWrapper] Avatar '{avatarInstance.name}' bound successfully (Complete: {allBound}).");
+            Debug.Log($"<color=green>[AvatarRigWrapper] Avatar '{avatarInstance.name}' bound successfully (Complete: {allBound}).</color>");
             return allBound;
         }
     }

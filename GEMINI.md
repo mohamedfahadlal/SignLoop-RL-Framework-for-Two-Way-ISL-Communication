@@ -28,6 +28,7 @@
 SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
 ├── GEMINI.md                     # Agent context & operational directives (this file)
 ├── SESSION_LOG.md                # Chronological session history and task status
+├── README.md                     # Master project README and quickstart guide
 ├── .gitattributes                # Git LFS tracking rules for 3D, audio, and ML binaries
 ├── .gitignore                    # Unity, Python venv, and large dataset ignore rules
 ├── requirements.txt              # Locked Python 3.12 dependencies
@@ -36,6 +37,7 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
 ├── train_policy.py               # Two-stage training: Supervised Warmup + REINFORCE RL
 ├── evaluate.py                   # Deterministic evaluation harness
 ├── data_prep.py                  # Offline MediaPipe landmark extraction & normalization
+├── export_isl_clips.py           # Dataset-to-Unity ISL clip converter (extension-ratio finger curls)
 ├── check_dataset_structure.py    # Local video indexing against Hugging Face metadata
 ├── check_include.py              # Full 263-class metadata indexer
 │
@@ -56,11 +58,29 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
 │
 └── isl-vr-unity/                 # Primary Unity 6.3 LTS VR Project
     ├── Assets/
-    │   ├── Animations/           # Canonical ISL hand postures & clips
+    │   ├── Animations/
+    │   │   └── ISLClips/         # Authentic 30-frame ISL gesture clips (.json)
+    │   ├── Resources/
+    │   │   └── ISLClips/         # Dynamic runtime clip library (.json)
     │   ├── Models/               # Rigged 3D avatars & mesh components (LFS)
+    │   │   ├── AvatarPrototype/  # 54k prototype humanoid with 52 ARKit shapes & 21-joint hands
+    │   │   └── README.md         # Rig and armature specifications
     │   ├── Prefabs/              # Avatar rigs & XR rig setups
     │   ├── Scenes/               # Main VR interaction scenes
-    │   └── Scripts/              # C# controllers (IK solvers, audio hooks, IPC bridge)
+    │   └── Scripts/              # C# controllers & procedural rigging
+    │       ├── Avatar/
+    │       │   ├── ISLSignPlayer.cs       # 3-phase sign player (Active -> Hold -> Return)
+    │       │   ├── ARKitFaceController.cs # 52 ARKit blendshapes (0 GC allocations)
+    │       │   └── ARKitBlendShape.cs     # Canonical blendshape enum
+    │       ├── Rigging/
+    │       │   ├── DesktopGestureTester.cs# Interactive desktop test harness (Speed, Curls, Orbit)
+    │       │   ├── HandPoseController.cs  # 21-joint finger pose interpolation (mirrored axes)
+    │       │   ├── ArmIKController.cs     # Analytical TwoBoneIK solver & forearm alignment
+    │       │   ├── AvatarRigWrapper.cs    # Prefab wrapper decoupling models from rigs
+    │       │   └── AvatarBoneMapping.cs   # Skeleton auto-population & bone binding
+    │       ├── Audio/            # whisper.cpp (STT) & Piper TTS hooks
+    │       ├── Bridge/           # IPC / socket bridge to Python ML policy
+    │       └── VR/               # OpenXR & Quest 3 hand tracking / controller interactions
     ├── Packages/                 # manifest.json & package-lock
     └── ProjectSettings/          # Input, OpenXR, and Editor text serialization
 ```
@@ -81,7 +101,28 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
 
 ---
 
-## 5. Unity & Git LFS Directives
+## 5. Procedural Rigging & Biomechanical Directives
+
+* **Sign Playback Lifecycle (3-Phase State Machine):**
+  - **Phase 1 (Active Trajectory, 2.5s):** Smooth interpolation across 30 temporal frames with a 300ms lead-in blend from starting rest pose.
+  - **Phase 2 (Posture Hold, 0.8s):** Steadily holds the final completed sign posture at the apex so conversational partners can clearly comprehend the sign.
+  - **Phase 3 (Lead-Out Blend, 0.5s):** Smooth cubic `SmoothStep` return lerp back to the natural resting stance (`RestLWrist`, `RestRWrist`).
+* **Anatomical Clamping & Mirrored Skeletons:**
+  - Knuckle flexion axes MUST be mirrored across the sagittal plane:
+    - Left Hand finger flexion axis: `(1, 0, 0)`
+    - Right Hand finger flexion axis: `(-1, 0, 0)`
+  - Finger curls strictly clamped between $0^\circ$ and $85^\circ$; thumb curls between $0^\circ$ and $65^\circ$.
+  - Handshake / Thumbs-Up world Euler orientations:
+    - Left Hand: `Quaternion.Euler(-90f * flipSign, 0f, 90f)`
+    - Right Hand: `Quaternion.Euler(-90f * flipSign, 0f, -90f)`
+  - Wrist joint 0 is preserved for `ArmIKController`; `HandPoseController` MUST only manipulate finger joints ($i \ge 1$).
+* **Performance Budget (Meta Quest 3 / Horizon OS):**
+  - Zero GC allocations in `Update()` and `LateUpdate()`. Pre-allocate all buffers and Quaternions.
+  - Avatar geometry: Target $\le 25\text{k}$ triangles for multi-avatar VR scenes; maintain 72+ FPS mobile VR framerate.
+
+---
+
+## 6. Unity & Git LFS Directives
 
 * **Always maintain Git LFS integrity:**
   - 3D models (`.fbx`, `.obj`, `.blend`, `.glb`), textures (`.png`, `.tga`, `.psd`), audio (`.wav`), and weights (`.onnx`, `.pth`) MUST be tracked by Git LFS.
@@ -93,5 +134,5 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
 
 ---
 
-## 6. Session Log Directive
+## 7. Session Log Directive
 Whenever finishing a work session or completing major milestones, record the progress, changes, and next steps in [`SESSION_LOG.md`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/SESSION_LOG.md).

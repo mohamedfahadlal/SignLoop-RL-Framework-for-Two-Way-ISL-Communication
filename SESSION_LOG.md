@@ -74,6 +74,73 @@ This document records the chronological history of work completed across session
 * **Arm IK & 21-Joint Finger Blending ([`ArmIKController`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/ArmIKController.cs) & [`HandPoseController`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs)):**
   - Scaffolds Unity Animation Rigging `TwoBoneIKConstraint` for Left and Right arms with persistent target and elbow hint transforms.
   - Implemented zero-allocation `Quaternion.Slerp` buffer blending across 21 joints per hand for canonical ISL shapes (`Fist`, `PointIndex`, `ThumbUp`, `Victory`, `CHand`, `OHand`, `OpenPalm`).
-  - Added Unity-compliant `.meta` text serialization files for all scripts and folders.
+### 3. Display Resolution & Anatomical Motion Fixes, and Authentic ISL Sign Motion Pipeline
+* **Scene vs. Game View Resolution Resolution:**
+  - Diagnosed why the avatar appeared crisp HD in the Scene tab but pixelated in the Game tab:
+    1. The Game view top-toolbar **Scale slider** is often scrolled above `1x` (e.g. 2x/3x zoom stretches pixel buffer).
+    2. Resolution dropdown set to **"Free Aspect"** in a small docked pane limits the physical render buffer.
+    3. The **"Low Resolution Aspect Ratios"** setting downsamples rendering on high-DPI displays.
+  - Programmatically enforced in [`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs):
+    - `targetCamera.allowMSAA = true;`
+    - `targetCamera.allowDynamicResolution = false;`
+    - `QualitySettings.antiAliasing = 8;` (8x MSAA)
+    - `QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;`
+  - Added on-screen guidance in the GUI panel reminding the user to set Scale to 1x and choose 1080p / 16:9.
+* **Biomechanical Impossible Motions & Thumbs Up Resolution:**
+  - Resolved wrist dislocation in [`ArmIKController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/ArmIKController.cs):
+    - In TwoBoneIK, the wrist (`tip`) previously forced a world identity rotation `(0,0,0)`, which twisted the hand backward and sideways.
+    - Added `matchWristRotation` toggle (default false). When false, the wrist naturally preserves its bind pose alignment with the forearm, eliminating unnatural twists.
+  - Fixed Thumbs Up in [`HandPoseController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs) & [`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs):
+    - Changed thumb abduction from `Vector3.up` (which caused axial twisting) to the transverse abduction axis (`Vector3.forward`).
+    - Added neutral handshake wrist orientation for Thumbs Up so the thumb points vertically up (+Y).
+    - Added zero-allocation [`SetFingerCurls(HandSide, float thumb, float index, float middle, float ring, float pinky)`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs) strictly clamped between 0° and 85°.
+* **Authentic ISL Sign Motion Clip Pipeline (Skeletal Keypoints $\rightarrow$ 3D Avatar):**
+  - Created [`export_isl_clips.py`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/export_isl_clips.py):
+    - Extracts 30-frame temporal trajectories from [`include_keypoints_master.npz`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/include_keypoints_master.npz) and [`dataset/data/include_keypoints.npz`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/dataset/data/include_keypoints.npz).
+    - Calibrates 3D coordinates (MediaPipe landmarks $\rightarrow$ Unity avatar physical arm reach: `0.20m/unit`).
+    - Derives wrist positions, elbow bend hints, wrist quaternions, and 5-finger curl angles.
+    - Exported 12 core ISL sign clips into [`isl-vr-unity/Assets/Animations/ISLClips/`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Animations/ISLClips) and [`isl-vr-unity/Assets/Resources/ISLClips/`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Resources/ISLClips):
+      * `Hello`, `ThankYou`, `HowAreYou`, `GoodMorning`, `Doctor`, `Friend`, `Teacher`, `India`, `You`, `I`, `Sign`, `House`.
+    - Generated valid Unity `.meta` files for all clips.
+  - Implemented [`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs):
+    - Streams 30-frame authentic human signs with smooth 250ms lead-in blending from rest stance.
+    - Smoothly drives `ArmIKController` (wrists, elbows) and `HandPoseController` (anatomical finger curls).
+    - 0 GC allocations in `LateUpdate()`.
+  - Upgraded [`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs) with interactive ISL Sign Studio UI:
+    - Clickable sign buttons, timeline progress bar, loop toggle, and pause/resume.
+### 4. Session 3: Action Pacing, Anatomical Thumbs Up, and Expressive Finger Curls (2026-09-18)
 
+#### A. Diagnostic & Root Causes
+1. **Actions Too Fast & Abrupt Snapping:** Clips previously ran at 1.0s and immediately snapped back to resting stance on completion, cutting off the sign before it could be observed.
+2. **Thumbs Up Pointing to Ground:** 
+   - In FBX humanoid models, bone length extends along local +Y. Applying world `Euler(0, 0, ±90)` rotated fingers in the XY plane without pitching the hand forward, causing the thumb to point downward towards the floor.
+   - `HandPoseController.LateUpdate()` previously looped through joint index 0 (the wrist), continuously overwriting the wrist's orientation with T-pose neutral angles.
+3. **Fingers Not Clear or Present:**
+   - Knuckles on the avatar's right hand are mirrored along the sagittal plane (Right Hand knuckle vector is -X, while Left Hand is +X). Having both hands flex along `+X` caused the right hand to hyperextend backwards.
+   - `HandPoseController.ApplyAnatomicalCurl()` had omitted `PinkyDIP`, leaving the pinky tip uncurled.
+   - Monocular MediaPipe hand landmarks in video compressed finger flexion to small angles, making motion imperceptible without amplification.
 
+#### B. Engineering Solutions Implemented
+1. **Three-Phase Sign Playback State Machine ([`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs)):**
+   - Active Trajectory (2.5s): Smooth interpolation across frames with 300ms lead-in blend.
+   - Hold Phase (0.8s): Steadily holds the completed sign posture at the apex so human observers can read the sign.
+   - Lead-Out Return (0.5s): Smooth cubic `SmoothStep` return lerp to neutral resting stance.
+   - Pacing Controls: Added interactive speed slider (`0.25x` to `2.0x`) with one-click presets (`0.5x Slow`, `0.75x`, `1.0x`, `1.5x`).
+   - Direct Disk Fallback: Reads directly from `Resources/ISLClips/*.json` on disk to immediately load updated clips without restarting Play Mode.
+2. **Anatomical Thumbs-Up Orientation ([`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs) & [`HandPoseController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs)):**
+   - Implemented exact mathematical Euler rotations for handshake orientation:
+     - Left Hand: `Quaternion.Euler(-90f * flipSign, 0f, 90f)`
+     - Right Hand: `Quaternion.Euler(-90f * flipSign, 0f, -90f)`
+     - Positions fingers forward (+Z), thumb straight UP (+Y), and palm inward ($\pm X$).
+   - Added interactive "Thumb Up: Flip 180°" toggle in GUI.
+   - Cleaned `CanonicalHandShape.ThumbUp` to curl 4 fingers to 80° while keeping thumb joints (CMC, MCP, IP) in natural open neutral extension.
+   - Added configurable `MatchWristRotation` toggle (default false): wrists naturally follow forearm IK for 100% human-safe, twist-free motion.
+3. **Expressive Finger Curls ([`HandPoseController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs) & [`export_isl_clips.py`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/export_isl_clips.py)):**
+   - Symmetrized flexion axes: Left Hand = `(1, 0, 0)`, Right Hand = `(-1, 0, 0)`.
+   - Symmetrized thumb flexion axes: Left Thumb = `(0.5, 0.8, 0.3)`, Right Thumb = `(-0.5, 0.8, 0.3)`.
+   - Added `PinkyDIP` to `ApplyAnatomicalCurl()`.
+   - Added `curlMultiplier` (default 1.25x, range 0.5x to 2.5x) with live GUI slider to make finger flexions clearly perceptible from across the room.
+   - Added interactive "Invert L Curls" and "Invert R Curls" buttons.
+   - Regenerated all 12 authentic ISL sign clips with 2.5s duration and extension ratio curling.
+
+---
