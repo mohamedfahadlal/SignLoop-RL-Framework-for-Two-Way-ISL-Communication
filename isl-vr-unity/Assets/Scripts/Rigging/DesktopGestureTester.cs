@@ -242,17 +242,16 @@ namespace SignLoop.Rigging
 
                 if (shape == CanonicalHandShape.ThumbUp && armIK != null)
                 {
-                    // Rotate wrists so thumbs point straight UP (+Y) and fingers point forward (+Z)
-                    armIK.SetMatchWristRotation(true);
-                    float flipSign = _flipThumb180 ? -1f : 1f;
-                    Quaternion leftThumbUpRot = Quaternion.Euler(-90f * flipSign, 0f, 90f);
-                    Quaternion rightThumbUpRot = Quaternion.Euler(-90f * flipSign, 0f, -90f);
-                    if (armIK.LeftArmTarget != null) armIK.LeftArmTarget.rotation = leftThumbUpRot;
-                    if (armIK.RightArmTarget != null) armIK.RightArmTarget.rotation = rightThumbUpRot;
+                    // Rotate wrists around forearm axis (pronation/supination) so thumbs point straight UP (+Y)
+                    float rollSign = _flipThumb180 ? -1f : 1f;
+                    armIK.SetWristRollOffset(isLeft: true, 90f * rollSign);
+                    armIK.SetWristRollOffset(isLeft: false, -90f * rollSign);
+                    armIK.SetMatchWristRotation(false);
                 }
                 else if (armIK != null)
                 {
-                    // Allow wrists to align naturally with forearm without twisting
+                    // Reset wrist roll to natural forearm alignment
+                    armIK.ResetWristRollOffsets();
                     armIK.SetMatchWristRotation(false);
                 }
 
@@ -388,10 +387,28 @@ namespace SignLoop.Rigging
             if (GUILayout.Button("8. O-Hand")) ApplyHandShape(CanonicalHandShape.OHand);
             GUILayout.EndHorizontal();
 
-            if (GUILayout.Button(_flipThumb180 ? "Thumb Up: Inverted [Click to Reset]" : "Thumb Up: Normal [Click to Flip 180°]"))
+            if (GUILayout.Button(_flipThumb180 ? "Thumb Up: Roll Inverted [Click to Toggle]" : "Thumb Up: Standard [Click to Toggle]"))
             {
                 _flipThumb180 = !_flipThumb180;
                 ApplyHandShape(CanonicalHandShape.ThumbUp);
+            }
+
+            if (armIK != null)
+            {
+                GUILayout.BeginHorizontal();
+                GUILayout.Label($"<b>Wrist Roll:</b> {armIK.LeftWristRollOffset:F0}°", GUILayout.Width(110));
+                float curRoll = armIK.LeftWristRollOffset;
+                float newRoll = GUILayout.HorizontalSlider(curRoll, -180f, 180f);
+                if (Mathf.Abs(newRoll - curRoll) > 0.5f)
+                {
+                    armIK.SetWristRollOffset(isLeft: true, newRoll);
+                    armIK.SetWristRollOffset(isLeft: false, -newRoll);
+                }
+                if (GUILayout.Button("Reset", GUILayout.Width(45)))
+                {
+                    armIK.ResetWristRollOffsets();
+                }
+                GUILayout.EndHorizontal();
             }
 
             GUILayout.Space(8);

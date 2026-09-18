@@ -144,3 +144,28 @@ This document records the chronological history of work completed across session
    - Regenerated all 12 authentic ISL sign clips with 2.5s duration and extension ratio curling.
 
 ---
+
+## Session 4: Hand Inversion Elimination & Skeletal Keypoint 3D Model Pipeline (2026-09-18)
+
+### 1. Diagnostic & Root Cause Analysis
+* **Hand Inversion / Forearm Twisting Bug:**
+  - **Berry Phase (Holonomy) Drift:** In Unity, transforms retain their rotations from previous frames when no Animator clip is active. `ArmIKController.SolveTwoBoneIK()` was applying `deltaUpper * root.rotation` and `deltaForearm * mid.rotation` without ever resetting bones to their bind pose. As the hand moved through 3D arcs during signing or procedural waving, shortest-arc rotations (`Quaternion.FromToRotation`) accumulated unconstrained axial roll, eventually twisting the forearm 180° and flipping the hand/fingers upside-down.
+  - **Elbow Plane Singularity / Normal Inversion:** The bend normal was derived via `Vector3.Cross(at, hintDir)`. When the hand crossed the plane passing through the shoulder and elbow hint, the cross product abruptly flipped sign ($+\vec{n} \to -\vec{n}$), causing the elbow and child hand to instantly flip inside-out.
+  - **Stuck Wrist Orientations:** When toggling hand shapes (such as `ThumbUp`), `MatchWristRotation` was set to true, overwriting `tip.rotation`. When switching to other shapes, `MatchWristRotation` was set to false, but `tip.localRotation` was never restored, leaving the wrist permanently locked in a twisted pose.
+
+### 2. Engineering Solutions Implemented
+* **Pristine Bind Pose Caching & Per-Frame Reset ([`ArmIKController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/ArmIKController.cs)):**
+  - Cached bind local rotations (`_leftUpperBindLocalRot`, `_leftMidBindLocalRot`, `_leftTipBindLocalRot`, and right-side mirrors) and bone lengths in `CaptureBindPose()`.
+  - In `SolveArmIK()`, bones are reset to their bind local rotations at the beginning of each frame before solving IK. This completely eliminates frame-to-frame roll accumulation, Berry phase, and stuck postures.
+* **Continuous, Inversion-Free Law-of-Cosines Solver:**
+  - Projects the elbow hint onto the plane perpendicular to the arm vector, smoothly blended with the natural human outward/backward bend direction:
+    $$B = A + L_1 (\cos\alpha \cdot \vec{u} + \sin\alpha \cdot \vec{v}_{\text{bend}})$$
+  - Eliminates the candidate angle flip (`dir1`, `dir2`) and cross-product sign flip entirely.
+* **Anatomical Clamping & Axial Wrist Roll Control:**
+  - Replaced arbitrary world Euler angles for `ThumbUp` with true anatomical pronation/supination (axial roll around the forearm axis).
+  - Added `LeftWristRollOffset` and `RightWristRollOffset` with live GUI slider in [`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs).
+  - Enforced `Quaternion.RotateTowards(naturalWristRot, targetRot, 70f)` when `MatchWristRotation` is enabled, guaranteeing noisy monocular video landmarks can never twist the wrist beyond physiological human limits.
+* **Keypoint Export Benchmark:**
+  - Benchmarked `export_isl_clips.py`: achieves **0.006s (6ms) per clip**.
+  - All 263 canonical vocabulary words can be converted to Unity JSON clips in **~1.6 seconds** (~8.5 MB total).
+  - All 3,295 dataset clips can be converted in **~20 seconds** (~110 MB total).

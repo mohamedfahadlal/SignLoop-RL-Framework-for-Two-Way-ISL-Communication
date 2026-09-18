@@ -277,6 +277,7 @@ namespace SignLoop.Avatar
             // Enable wrist orientation matching for real human sign playback
             if (armIK != null)
             {
+                armIK.ResetWristRollOffsets();
                 armIK.SetMatchWristRotation(matchWristRotation);
             }
 
@@ -294,6 +295,7 @@ namespace SignLoop.Avatar
             {
                 armIK.SetLeftArmTarget(RestLWrist, Quaternion.identity);
                 armIK.SetRightArmTarget(RestRWrist, Quaternion.identity);
+                armIK.ResetWristRollOffsets();
                 armIK.SetMatchWristRotation(false);
             }
 
