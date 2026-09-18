@@ -107,14 +107,20 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
   - **Phase 1 (Active Trajectory, 2.5s):** Smooth interpolation across 30 temporal frames with a 300ms lead-in blend from starting rest pose.
   - **Phase 2 (Posture Hold, 0.8s):** Steadily holds the final completed sign posture at the apex so conversational partners can clearly comprehend the sign.
   - **Phase 3 (Lead-Out Blend, 0.5s):** Smooth cubic `SmoothStep` return lerp back to the natural resting stance (`RestLWrist`, `RestRWrist`).
+* **Procedural Two-Bone IK & Drift-Free Solvers (`ArmIKController`):**
+  - **Pristine Bind-Pose Reset:** Bones (`root`, `mid`, `tip`) MUST be reset to their pristine bind local rotations at the beginning of each frame before solving IK. This strictly eliminates frame-to-frame roll accumulation (Berry phase / geometric holonomy) that causes 180° forearm twisting and inverted hands.
+  - **Continuous Law-of-Cosines Elbow Derivation:**
+    $$B = A + L_1 \left( \cos\alpha \cdot \vec{u} + \sin\alpha \cdot \vec{v}_{\text{bend}} \right)$$
+    $\vec{v}_{\text{bend}}$ is projected onto the plane perpendicular to the arm vector $\vec{u}$ and smoothly blended with the natural human outward/backward bend direction. Never derive the bend normal via an unconstrained `Vector3.Cross(at, hintDir)` that flips sign when crossing planes.
+  - **Anatomical Clamping & Forearm Pronation/Supination:**
+    - Forearm hinge is strictly aligned with the elbow bend plane (the human humeroulnar joint does not twist).
+    - Thumbs-Up and Handshake orientations MUST be driven via axial roll offsets around the forearm axis (`LeftWristRollOffset`, `RightWristRollOffset`), NOT unconstrained world Euler angles.
+    - When `MatchWristRotation` is enabled, wrist deviation is strictly clamped using `Quaternion.RotateTowards(naturalWristRot, targetRot, 70f)`. Noisy monocular video landmark tracking can NEVER twist the wrist beyond physiological human limits or invert the hand.
 * **Anatomical Clamping & Mirrored Skeletons:**
   - Knuckle flexion axes MUST be mirrored across the sagittal plane:
     - Left Hand finger flexion axis: `(1, 0, 0)`
     - Right Hand finger flexion axis: `(-1, 0, 0)`
   - Finger curls strictly clamped between $0^\circ$ and $85^\circ$; thumb curls between $0^\circ$ and $65^\circ$.
-  - Handshake / Thumbs-Up world Euler orientations:
-    - Left Hand: `Quaternion.Euler(-90f * flipSign, 0f, 90f)`
-    - Right Hand: `Quaternion.Euler(-90f * flipSign, 0f, -90f)`
   - Wrist joint 0 is preserved for `ArmIKController`; `HandPoseController` MUST only manipulate finger joints ($i \ge 1$).
 * **Performance Budget (Meta Quest 3 / Horizon OS):**
   - Zero GC allocations in `Update()` and `LateUpdate()`. Pre-allocate all buffers and Quaternions.

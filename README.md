@@ -59,7 +59,7 @@ SignLoop operates as a bidirectional, real-time edge translation pipeline:
 | Domain | Framework / Tool | Key Details |
 | :--- | :--- | :--- |
 | **VR Engine** | Unity 6.3 LTS (6000.0.33f1) | OpenXR, Android Build Target (Horizon OS), Meta XR Core SDK |
-| **Rigging & IK** | Unity Animation Rigging | `TwoBoneIKConstraint` (arms), analytical law-of-cosines fallback, forearm alignment |
+| **Rigging & IK** | Unity Animation Rigging | `TwoBoneIKConstraint` (arms), drift-free Law-of-Cosines solver, per-frame bind reset, axial wrist roll |
 | **Finger Animation** | Procedural 21-Joint Slerp | Mirrored knuckle flexion axes, $0^\circ$–$85^\circ$ anatomical joint limits, live curl scaling |
 | **Facial Animation**| ARKit / FACS Blendshapes | 52 facial blendshape channels for Non-Manual Markers (NMMs), 0 GC allocations |
 | **ML / RL Policy** | PyTorch 2.1.2, Gymnasium 1.0 | BiGRU + Temporal Attention, REINFORCE fine-tuning over 263 sign classes |
@@ -148,7 +148,7 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
 * [x] **Stage 3: Unity 6.3 LTS VR Rigging & Desktop Motion Studio**
   - Implemented modular `AvatarRigWrapper` and `AvatarBoneMapping` allowing arbitrary avatar mesh swapping with zero script breakage.
   - Zero-allocation 52 ARKit facial blendshape manager (`ARKitFaceController`).
-  - Analytical Two-Bone IK arm solver with forearm-guided wrist alignment (`ArmIKController`).
+  - Drift-free analytical Two-Bone IK arm solver with per-frame bind-pose reset and anatomical forearm pronation/supination (`ArmIKController`).
   - Anatomically clamped 21-joint finger pose controller with mirrored knuckle flexion axes (`HandPoseController`).
   - 3-Phase ISL sign player: Active Trajectory (2.5s) $\to$ Apex Posture Hold (0.8s) $\to$ Smooth Return (0.5s) (`ISLSignPlayer`).
   - Comprehensive desktop motion studio with mouse orbit/zoom, speed slider, reload buttons, and canonical handshape hotkeys (`DesktopGestureTester`).
@@ -227,7 +227,9 @@ You can fully test and inspect avatar animations, arm IK, finger postures, and s
      * `6` = Victory
      * `7` = C-Hand
      * `8` = O-Hand
-   - **Thumb Up 180° Flip:** Toggle the **"Thumb Up: Normal / Inverted"** button to verify handshake orientation.
+   - **Thumb Up & Wrist Roll Controls:**
+     * Click **"Thumb Up: Standard / Roll Inverted"** to test handshake and thumbs-up postures.
+     * Adjust the **Wrist Roll Slider** (`-180°` to `+180°`) with **Reset** button to fine-tune forearm pronation/supination in real time.
    - **Camera Controls:**
      * **Right-Click + Drag:** Orbit camera around avatar.
      * **Scroll Wheel:** Zoom in/out to inspect hand and finger curls closely.

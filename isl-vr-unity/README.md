@@ -54,6 +54,6 @@ When testing in the Editor on desktop:
    - **Authentic ISL Sign Playback:** Click any sign button (`Hello`, `ThankYou`, `House`, `Doctor`, etc.) to trigger 3-phase playback (Active Trajectory $\to$ Posture Hold $\to$ Smooth Return).
    - **Speed Pacing Controls:** Adjust the slider from `0.25x` to `2.0x` or use one-click presets (`0.5x Slow`, `0.75x`, `1.0x`, `1.5x`).
    - **Static Handshapes (Keys 1–8):** Test canonical postures (`Neutral`, `OpenPalm`, `Fist`, `PointIndex`, `ThumbUp`, `Victory`, `CHand`, `OHand`).
-   - **Thumb Up Orientation Toggle:** Click **"Thumb Up: Flip 180°"** to verify skyward vs inverted handshake orientation.
+   - **Thumb Up & Wrist Roll Controls:** Click **"Thumb Up: Standard / Roll Inverted"** to test handshake and thumbs-up postures; adjust the **Wrist Roll Slider** (`-180°` to `+180°`) with **Reset** button to fine-tune forearm pronation/supination in real time.
    - **Finger Curl Multiplier:** Scale finger curl angles (`0.5x` to `2.5x`) to fine-tune posture expressiveness.
    - **Mouse Orbit & Zoom:** Hold **Right-Click** and drag to orbit camera around the avatar; use the **Scroll Wheel** to zoom directly into hands and face.
