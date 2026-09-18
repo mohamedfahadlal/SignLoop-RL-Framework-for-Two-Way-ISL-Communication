@@ -14,7 +14,7 @@ from tqdm import tqdm
 from models.policy import ISLPolicyNetwork
 from isl_env import ISLEnv
 
-def train_policy_stable(pretrain_epochs=20, rl_episodes=3000, batch_size=32):
+def train_policy_stable(pretrain_epochs=20, rl_episodes=10000, batch_size=32):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
     
@@ -87,10 +87,8 @@ def train_policy_stable(pretrain_epochs=20, rl_episodes=3000, batch_size=32):
         log_prob = dist.log_prob(action)
         
         # Step through Environment
-        _, _, _, _, info = env.step(action.item())
+        _, reward, _, _, info = env.step(action.item())
         is_correct = (info["guessed_word_id"] == info["expected_word_id"])
-        
-        reward = 1.0 if is_correct else -0.1
         
         # Calculate Advantage (R - Moving Average Baseline)
         running_baseline = 0.95 * running_baseline + 0.05 * reward
@@ -116,10 +114,10 @@ def train_policy_stable(pretrain_epochs=20, rl_episodes=3000, batch_size=32):
         })
 
     # Save trained checkpoint
-    save_path = Path("models/isl_policy_model.pth")
+    save_path = Path("models/isl_policy_10k.pth")
     save_path.parent.mkdir(parents=True, exist_ok=True)
     torch.save(policy.state_dict(), save_path)
     print(f"\nTraining Complete! Checkpoint saved to {save_path}")
 
 if __name__ == "__main__":
-    train_policy_stable(pretrain_epochs=20, rl_episodes=3000)
+    train_policy_stable(pretrain_epochs=20, rl_episodes=10000)

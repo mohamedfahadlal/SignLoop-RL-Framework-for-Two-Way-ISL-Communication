@@ -16,7 +16,7 @@ def evaluate_policy(num_trials=500):
     env = ISLEnv(data_path="dataset/data/include_keypoints_master.npz")
     
     policy = ISLPolicyNetwork(input_dim=225, num_classes=env.action_space.n).to(device)
-    policy.load_state_dict(torch.load("models/isl_policy_model.pth", map_location=device))
+    policy.load_state_dict(torch.load("models/isl_policy_10k.pth", map_location=device))
     policy.eval()
     
     # Tracking Variables
