@@ -42,9 +42,9 @@ namespace SignLoop.Rigging
         [SerializeField] private Vector3 rightFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
 
         [Tooltip("Thumb abduction/flexion axis for Left hand.")]
-        [SerializeField] private Vector3 leftThumbFlexionAxis = new Vector3(-0.7f, 0.2f, -0.6f);
+        [SerializeField] private Vector3 leftThumbFlexionAxis = new Vector3(0.7f, -0.2f, 0.6f);
         [Tooltip("Thumb abduction/flexion axis for Right hand.")]
-        [SerializeField] private Vector3 rightThumbFlexionAxis = new Vector3(-0.7f, -0.2f, 0.6f);
+        [SerializeField] private Vector3 rightThumbFlexionAxis = new Vector3(0.7f, 0.2f, -0.6f);
 
         [Tooltip("Global multiplier for finger curls (default 1.0x).")]
         [Range(0.5f, 2.0f)]
@@ -169,12 +169,12 @@ namespace SignLoop.Rigging
             if (side == HandSide.Left)
             {
                 leftFingerFlexionAxis = -leftFingerFlexionAxis;
-                leftThumbFlexionAxis = new Vector3(-leftThumbFlexionAxis.x, leftThumbFlexionAxis.y, leftThumbFlexionAxis.z);
+                leftThumbFlexionAxis = -leftThumbFlexionAxis;
             }
             else
             {
                 rightFingerFlexionAxis = -rightFingerFlexionAxis;
-                rightThumbFlexionAxis = new Vector3(-rightThumbFlexionAxis.x, rightThumbFlexionAxis.y, rightThumbFlexionAxis.z);
+                rightThumbFlexionAxis = -rightThumbFlexionAxis;
             }
             Debug.Log($"[HandPoseController] Inverted {side} finger flexion axis to: {(side == HandSide.Left ? leftFingerFlexionAxis : rightFingerFlexionAxis)}");
         }

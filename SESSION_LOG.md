@@ -304,11 +304,12 @@ This document records the chronological history of work completed across session
   - Without lead-in interpolation, finger curls in [`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs) jumped from $0^\circ$ to apex curl in a single frame at the start of sign playback.
 
 ### 2. Implementation & Architectural Fixes
-* **Natural Flexion Axes ([`HandPoseController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs) & [`DesktopTestScene.unity`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scenes/DesktopTestScene.unity)):**
+* **Natural Flexion & Thumb Opposition Axes ([`HandPoseController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs) & [`DesktopTestScene.unity`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scenes/DesktopTestScene.unity)):**
   - Set `leftFingerFlexionAxis` and `rightFingerFlexionAxis` to `(-1, 0, 0)`.
-  - Re-anchored thumb opposition axes to `(-0.7, 0.2, -0.6)` (left) and `(-0.7, -0.2, 0.6)` (right).
+  - Re-anchored empirical thumb opposition axes to `(0.7, -0.2, 0.6)` (left) and `(0.7, 0.2, -0.6)` (right), verified in-engine to oppose directly into the palm.
   - Updated serialized scene fields in `DesktopTestScene.unity`.
-  - Updated `FlipFingerFlexion(HandSide side)` to flip both finger flexion and thumb opposition X components synchronously.
+  - Updated `FlipFingerFlexion(HandSide side)` to invert both finger and thumb axes cleanly.
+  - Added `EnsureDependencies()` to `AvatarRigWrapper.AutoBind()` and robust fallback component lookup in `HandCurlDiagnostic.cs`, eliminating `Mapping or HandPoseController not found`.
 * **Thumbs-Up Wrist Roll Correction ([`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs)):**
   - Inverted `rollSign` for `ThumbUp` to $-1f$ by default, applying $-90^\circ$ on the left and $+90^\circ$ on the right so the thumb points straight **UP** (+Y).
 * **Smooth 300ms Finger Curl Lead-In Blend ([`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs)):**
@@ -322,6 +323,8 @@ This document records the chronological history of work completed across session
 * In-engine diagnostic confirms:
   - `[LEFT HAND] POSITIVE axis ((-1.00, 0.00, 0.00)) curls INTO palm! (tip gets 0.021m closer to wrist)`
   - `[RIGHT HAND] POSITIVE axis ((-1.00, 0.00, 0.00)) curls INTO palm! (tip gets 0.021m closer to wrist)`
+  - `[LEFT THUMB] POSITIVE axis ((0.70, -0.20, 0.60)) opposes INTO palm!`
+  - `[RIGHT THUMB] POSITIVE axis ((0.70, 0.20, -0.60)) opposes INTO palm!`
 * All 8 canonical hand shapes (`Fist`, `PointIndex`, `ThumbUp`, `Victory`, etc.) bend inward toward the palm.
 * In `ThumbUp`, thumbs point vertically upward (+Y).
 * Transitions from the resting stance into sign postures are fluid and continuous.

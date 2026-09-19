@@ -120,7 +120,7 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
   - In the humanoid rig (`model.fbx`) imported into Unity:
     - Left Hand finger flexion axis: `(-1, 0, 0)`
     - Right Hand finger flexion axis: `(-1, 0, 0)` (rotation around local $-X$ curls fingers inward into the palm on both hands; positive $+X$ rotation causes dorsal hyperextension / backward bending).
-    - Thumb opposition axes: `(-0.7, 0.2, -0.6)` (left) and `(-0.7, -0.2, 0.6)` (right).
+    - Thumb opposition axes: `(0.7, -0.2, 0.6)` (left) and `(0.7, 0.2, -0.6)` (right).
     - Thumbs-Up wrist roll offsets: Left `-90f`, Right `+90f` ensuring thumbs point straight UP (+Y).
   - Joint curl distribution across the phalanx hierarchy: MCP 35%, PIP 50%, DIP 35% of total curl.
   - Finger curls strictly clamped to non-negative angles between $0^\circ$ and $85^\circ$; thumb curls between $0^\circ$ and $65^\circ$.

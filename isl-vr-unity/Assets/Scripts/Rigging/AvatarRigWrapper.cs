@@ -54,6 +54,7 @@ namespace SignLoop.Rigging
         /// </summary>
         public void AutoBind()
         {
+            EnsureDependencies();
             GameObject target = currentAvatar;
 
             // If currentAvatar is missing or is the empty AvatarSlot container, find the real model inside

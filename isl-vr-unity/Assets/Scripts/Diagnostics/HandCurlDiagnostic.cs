@@ -32,8 +32,8 @@ namespace SignLoop.Diagnostics
             }
 
             rig.AutoBind();
-            var hp = rig.HandPose;
-            var mapping = rig.GetComponentInChildren<SignLoop.Rigging.AvatarBoneMapping>();
+            var hp = rig.HandPose ?? rig.GetComponentInChildren<SignLoop.Rigging.HandPoseController>() ?? FindFirstObjectByType<SignLoop.Rigging.HandPoseController>();
+            var mapping = rig.GetComponentInChildren<SignLoop.Rigging.AvatarBoneMapping>() ?? FindFirstObjectByType<SignLoop.Rigging.AvatarBoneMapping>();
             if (mapping == null || hp == null)
             {
                 Debug.LogWarning("[HandCurlDiagnostic] Mapping or HandPoseController not found.");
