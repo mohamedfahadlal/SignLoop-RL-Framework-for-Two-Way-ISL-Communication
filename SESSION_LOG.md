@@ -331,3 +331,4 @@ This document records the chronological history of work completed across session
 * Zero GC allocations maintained across all runtime loops.
 
 * **Compiler Warnings Resolved:** Fixed \CS0162: Unreachable code detected\ in \AvatarRigWrapper.cs\ by replacing an unconditional return inside a \or\ loop with a clean \if\ evaluation block.
+* **Biomechanics Correction:** Reverted the finger flexion axis to \(1, 0, 0)\. A previous diagnostic misidentified \(-1, 0, 0)\ as flexion, which was actually causing the fingers to hyperextend (roll backwards over the top of the hand).
