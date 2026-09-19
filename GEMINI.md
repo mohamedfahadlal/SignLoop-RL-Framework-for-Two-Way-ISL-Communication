@@ -116,11 +116,14 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
     - Forearm hinge is strictly aligned with the elbow bend plane (the human humeroulnar joint does not twist).
     - Thumbs-Up and Handshake orientations MUST be driven via axial roll offsets around the forearm axis (`LeftWristRollOffset`, `RightWristRollOffset`), NOT unconstrained world Euler angles.
     - When `MatchWristRotation` is enabled, wrist deviation is strictly clamped using `Quaternion.RotateTowards(naturalWristRot, targetRot, 70f)`. Noisy monocular video landmark tracking can NEVER twist the wrist beyond physiological human limits or invert the hand.
-* **Anatomical Clamping & Mirrored Skeletons:**
-  - Knuckle flexion axes MUST be mirrored across the sagittal plane:
-    - Left Hand finger flexion axis: `(1, 0, 0)`
-    - Right Hand finger flexion axis: `(-1, 0, 0)`
-  - Finger curls strictly clamped between $0^\circ$ and $85^\circ$; thumb curls between $0^\circ$ and $65^\circ$.
+* **Anatomical Clamping & Armature Orientation:**
+  - In the humanoid rig (`model.fbx`) imported into Unity:
+    - Left Hand finger flexion axis: `(-1, 0, 0)`
+    - Right Hand finger flexion axis: `(-1, 0, 0)` (rotation around local $-X$ curls fingers inward into the palm on both hands; positive $+X$ rotation causes dorsal hyperextension / backward bending).
+    - Thumb opposition axes: `(-0.7, 0.2, -0.6)` (left) and `(-0.7, -0.2, 0.6)` (right).
+    - Thumbs-Up wrist roll offsets: Left `-90f`, Right `+90f` ensuring thumbs point straight UP (+Y).
+  - Joint curl distribution across the phalanx hierarchy: MCP 35%, PIP 50%, DIP 35% of total curl.
+  - Finger curls strictly clamped to non-negative angles between $0^\circ$ and $85^\circ$; thumb curls between $0^\circ$ and $65^\circ$.
   - Wrist joint 0 is preserved for `ArmIKController`; `HandPoseController` MUST only manipulate finger joints ($i \ge 1$).
 * **Performance Budget (Meta Quest 3 / Horizon OS):**
   - Zero GC allocations in `Update()` and `LateUpdate()`. Pre-allocate all buffers and Quaternions.

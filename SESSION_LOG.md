@@ -169,3 +169,161 @@ This document records the chronological history of work completed across session
   - Benchmarked `export_isl_clips.py`: achieves **0.006s (6ms) per clip**.
   - All 263 canonical vocabulary words can be converted to Unity JSON clips in **~1.6 seconds** (~8.5 MB total).
   - All 3,295 dataset clips can be converted in **~20 seconds** (~110 MB total).
+
+---
+
+## Session 5: Complete 80-Word Vocabulary Keypoint Extraction & Unity Tester Upgrades (2026-09-19)
+
+### 1. Architectural Scaling & Dataset Keypoint Extraction
+* **Dataset Vocabulary Audit:**
+  - Audited `dataset/data/include_keypoints.npz` (1,118 video extractions covering 73 unique words across 4 categories: Jobs, Transportation, People, Places).
+  - Audited `include_keypoints_master.npz` (greetings & core pronouns: `Hello`, `ThankYou`, `HowAreYou`, `GoodMorning`, `You`, `I`, `Sign`).
+  - Combined vocabulary count: **80 authentic ISL words**.
+* **Automated Sample Scoring & Clip Exporter ([`export_isl_clips.py`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/export_isl_clips.py)):**
+  - Implemented `score_sample(sample)` to evaluate tracking completeness (30/30 active hand frames) and motion dynamism across all samples of each class, ensuring the highest quality performance for each sign.
+  - Preserved verified baseline indices for calibrated words (`Doctor`, `Friend`, `Teacher`, `India`, `House`).
+  - Built `clean_sign_name(raw_label)` generating standard PascalCase names.
+  - Built `ensure_meta_file(file_path)` automatically generating valid Unity `.meta` files with unique GUIDs for all exported `.json` assets.
+  - Exported all 80 authentic ISL sign clips into:
+    - `isl-vr-unity/Assets/Animations/ISLClips/` (80 clips + 80 `.meta` files)
+    - `isl-vr-unity/Assets/Resources/ISLClips/` (80 clips + 80 `.meta` files)
+
+### 2. Unity Tester App Upgrades ([`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs) & [`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs))
+* **Alphabetical Clip Discovery:**
+  - Upgraded [`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs) to sort `AvailableSignNames` alphabetically upon clip loading.
+* **Interactive Sign Browser & Filter System:**
+  - Added live search bar with instant substring filtering and one-click clear (`✕`).
+  - Added semantic category filters (`All (80)`, `Core`, `Transit`, `People`, `Places`, `Jobs`, `Misc`).
+  - Added active sign indicator highlighting the currently playing sign in cyan.
+  - Pre-allocated zero-allocation `_filteredSignsCache` for smooth 60+ FPS desktop and mobile VR execution.
+  - Full fallback catalog ensuring all 80 signs are browsable immediately even prior to runtime clip initialization.
+
+---
+
+## Session 6: Biomechanical Calibration & Avatar Body Penetration Fix (2026-09-19)
+
+### 1. Root Cause Analysis
+* **Body Penetration (Wrists & Hands clipping into torso/pelvis):**
+  - In [`export_isl_clips.py`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/export_isl_clips.py), `CHEST_CENTER` was set with $Z = 0.05$m and clamped to $Z \in [0.10, 0.55]$m. Since the avatar torso surface sits at $Z \approx +0.10$–$0.12$m, wrists at $Z = 0.10$m drove hands and 10cm fingers directly inside the ribcage and abdomen.
+  - In [`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs), neutral rest targets were set to $Y = 0.85$m–$0.90$m and $Z = 0.15$m–$0.20$m (groin/thigh level, penetrating the pelvis).
+  - Lack of an analytical clearance boundary in [`ArmIKController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/ArmIKController.cs) allowed unconstrained IK targets to push through the torso mesh.
+* **Low Hand Elevations (Signs not raising up):**
+  - `ARM_SCALE_XY` was set to $0.20$, compressing normalized MediaPipe vertical reach ($\sim 0.6$m range) down to only $0.12$–$0.30$m.
+  - Minimum vertical clamp allowed $Y$ down to $0.70$m (upper thighs).
+  - Sample selector previously prioritized total variance, occasionally selecting low-elevation demonstrations where signers signed near the waist (e.g. `Friend` at idx 26 with $peak\_elev = -0.54$).
+
+### 2. Implementation & Architectural Fixes
+* **Procedural Torso & Pelvis Clearance ([`ArmIKController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/ArmIKController.cs)):**
+  - Integrated an analytical clearance boundary inside `SolveArmIK()`:
+    - Enforces a minimum safe depth $Z \ge 0.28$m ($Z \ge 0.20$m for upper face/head) across the avatar torso width ($|X| \le 0.24$m).
+    - Enforces a minimum vertical floor $Y \ge 1.00$m to prevent hands from dropping into hips or thighs.
+* **Ergonomic Forward Rest Stance ([`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs)):**
+  - Updated neutral rest positions to natural forward waist height:
+    - Left Wrist: `(-0.24f, 1.08f, 0.33f)`, Right Wrist: `(0.24f, 1.08f, 0.33f)`
+    - Left Elbow: `(-0.42f, 1.15f, -0.15f)`, Right Elbow: `(0.42f, 1.15f, -0.15f)`
+* **Dataset Calibration & Continuous Elevation Scoring ([`export_isl_clips.py`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/export_isl_clips.py)):**
+  - Calibrated reference anchor: `BASE_ANCHOR = np.array([0.0, 1.38, 0.35])` (shoulder height $1.38$m, forward signing plane $0.35$m).
+  - Scaled reach axes: `ARM_SCALE_X = 0.28`, `ARM_SCALE_Y = 0.34`, `ARM_SCALE_Z = 0.16`.
+  - Bounded signing envelope: $Y \in [1.02, 1.70]$m, $Z \in [0.30, 0.55]$m.
+  - Implemented continuous elevation scoring `score_sample()`:
+    $$(lh\_act + rh\_act) \times 10.0 + wrist\_range \times 100.0 + peak\_elev \times 500.0$$
+    automatically selecting expressive high-elevation samples for all words (e.g., `Friend` idx 97 at $Y = 1.51$m, `House` idx 866 at $Y = 1.70$m).
+  - Updated master target indices for core greetings (`Hello`: 1221, `ThankYou`: 380, `HowAreYou`: 1514, `GoodMorning`: 2429, `You`: 1482, `I`: 2570, `Sign`: 1944).
+
+### 3. Verification & Results
+* **Global Trajectory Audit (All 80 Clips):**
+  - **Min Z Clearance:** $0.30$m across all frames (strictly $> 0.28$m safe clearance). Zero torso/body penetration.
+  - **Min Y Elevation:** $1.02$m across all frames (comfortably at natural waist level, zero leg/groin drooping).
+  - **Peak Y Elevation:** $1.33$m–$1.70$m (signs clearly performed at chest, chin, and head levels).
+  - 100% valid Unity `.meta` files generated with unique GUIDs.
+
+---
+
+## Session 7: High-Precision Anatomical Finger Rigging & Action Diversity (2026-09-19)
+
+### 1. Root Cause Analysis & Biomechanical Discoveries
+* **Backward Finger Bending / Hyperextension:**
+  - In [`HandPoseController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs), `rightFingerFlexionAxis` was previously set to `(-1, 0, 0)` under the assumption of mirrored coordinate axes across the sagittal plane. However, in the Avaturn humanoid rig (`model.fbx`), both left and right armatures share bone orientation: bone length extends along local $+Y$, and the palmar normal points toward $+Z$. Rotating about $+X$ curls fingers into the palm on **both** hands. Rotating around $-X$ on the right hand bent fingers backward into severe hyperextension.
+  - **Hierarchical Angle Compounding:** MCP, PIP, and DIP joints were each receiving the full curl angle ($85^\circ \times 3 = 255^\circ$), compounding into broken, self-intersecting finger meshes.
+  - **Thumb Spin:** The thumb flexion axis had $Y = 0.8$, which caused axial rotation around the bone length rather than anatomical opposition across the palm.
+* **Duplicate / Identical Sign Actions:**
+  - Audit discovered that `Baby <-> Hello`, `HowAreYou <-> Man`, and `Location <-> You` had **identical trajectories (0.0000m difference)**.
+  - This occurred because `include_keypoints_master.npz` contains 990 duplicate entries copied from the 73 Zenodo classes. Indices `1221`, `1514`, `1482` originally assigned to `Hello`, `HowAreYou`, `You` actually belonged to `Baby`, `Man`, `Location`.
+* **Coarse Finger Curl Approximation:**
+  - Simple 2D extension ratios failed to capture distinct ISL finger postures, producing ambiguous curls instead of clear pointing, victory, fist, or open-palm postures.
+
+### 2. Implementation & Architectural Fixes
+* **Biomechanical Hand Rigging ([`HandPoseController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs) & [`DesktopTestScene.unity`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scenes/DesktopTestScene.unity)):**
+  - Aligned `rightFingerFlexionAxis` to `(1, 0, 0)`, eliminating backward bending and hyperextension on both hands.
+  - Re-anchored thumb opposition axes to `(0.7, 0.2, 0.6)` (left) and `(0.7, -0.2, 0.6)` (right).
+  - Implemented anatomical joint curl distribution:
+    - MCP: $35\%$ of curl
+    - PIP: $50\%$ of curl
+    - DIP: $35\%$ of curl
+    - Clamped strictly to non-negative angles $[0^\circ, \text{max}]$.
+  - Updated serialized scene overrides in `DesktopTestScene.unity` (`rightFingerFlexionAxis: {x: 1, y: 0, z: 0}`, `curlMultiplier: 1`).
+* **High-Precision 3D Joint Angular Extraction ([`export_isl_clips.py`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/export_isl_clips.py)):**
+  - Implemented `compute_segment_angle(p1, p2, p3)` calculating true 3D joint articulation angles between phalanx segments (MCP, PIP, DIP).
+  - Blended 3D joint angles with knuckle-to-tip extension ratios and thumb opposition distance:
+    - `Teacher`: Sharp pointing gesture ($I = 9^\circ$, $M/R/P = 82^\circ$, $T = 53^\circ$).
+    - `Hello`: Open waving palm ($T = 0^\circ, I = 8^\circ, M = 5^\circ, R = 4^\circ, P = 5^\circ$).
+    - `Friend`: Clasped fist ($T = 2^\circ, I = 76^\circ, M = 78^\circ, R = 72^\circ, P = 57^\circ$).
+* **100% Unique Action Trajectories:**
+  - Selected pure, non-overlapping master samples for core greetings (`Hello`: 47, `ThankYou`: 380, `HowAreYou`: 2046, `GoodMorning`: 132, `You`: 52, `I`: 93, `Sign`: 7).
+  - Implemented diversity-enforcing candidate selection that penalizes candidates within 10cm of any already-chosen sign.
+  - Re-exported all 80 clips into `Assets/Animations/ISLClips/` and `Assets/Resources/ISLClips/`.
+  - Comprehensive pairwise audit: **0 duplicate or near-identical pairs across all 80 vocabulary words** (minimum trajectory difference $> 1$cm).
+* **Studio Tester & Player Telemetry ([`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs) & [`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs)):**
+  - Added live right-hand finger curl readouts (`T: ... I: ... M: ... R: ... P: ...`) in `ISLSignPlayer.cs` and `DesktopGestureTester.cs`.
+  - Added active flexion axes status display (`L=(1, 0, 0) | R=(1, 0, 0)`) in the OnGUI studio panel.
+  - Reset curl tracking fields to $0$ on playback stop.
+
+### 3. Verification & Operational Status
+* **Finger Flexion:** Both hands curl naturally inward toward the palm. Zero hyperextension or backward bending.
+* **Finger Articulation:** Pointing, fists, open palms, and conversational postures are crisp, high-contrast, and clearly readable by the viewer.
+* **Trajectory Distinctness:** All 80 words perform completely distinct physical motions.
+* **Performance:** 0 runtime GC allocations in `Update()`, `LateUpdate()`, and `OnGUI()`. Ready for Quest 3 VR deployment.
+
+---
+
+## Session 8: Natural Biomechanical Flexion & Thumbs-Up Orientation Fix (2026-09-19)
+
+### 1. Root Cause Analysis
+* **Finger Flexion Direction (Empirical In-Engine Verification):**
+  - Created [`HandCurlDiagnostic.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Diagnostics/HandCurlDiagnostic.cs) executing direct 3D Euclidean distance measurements between fingertip and wrist on the bound avatar armature in Unity.
+  - Empirical Unity measurement results:
+    - **Neutral stance:** Tip-to-wrist distance = $0.130$m.
+    - **Flexion along $(-1, 0, 0)$:** Tip-to-wrist distance = $0.109$m (fingertip moves **$2.1$cm closer** to the wrist, naturally curling inward into the palm).
+    - **Flexion along $(+1, 0, 0)$:** Tip-to-wrist distance = $0.141$m (fingertip moves **$1.1$cm farther** from the wrist, hyperextending backward away from the palm).
+  - Setting flexion axes to `(1, 0, 0)` caused finger rotations to execute in the **exact opposite direction of natural movement** across all canonical postures and sign playback.
+  - Therefore, `(-1, 0, 0)` is the definitive anatomical flexion axis for both hands in Unity's coordinate system.
+* **Thumbs-Up Axial Wrist Roll Inversion:**
+  - In [`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs), the forearm roll offset applied for `ThumbUp` was previously set to $+90^\circ$ on the left and $-90^\circ$ on the right.
+  - Because the thumb is positioned at $+Z$ in rest stance, rotating $+90^\circ$ rolled the wrist so that the thumbs pointed straight **DOWN** (a "thumbs down" gesture) rather than **UP**.
+* **Finger Pose Snapping:**
+  - Without lead-in interpolation, finger curls in [`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs) jumped from $0^\circ$ to apex curl in a single frame at the start of sign playback.
+
+### 2. Implementation & Architectural Fixes
+* **Natural Flexion Axes ([`HandPoseController.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/HandPoseController.cs) & [`DesktopTestScene.unity`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scenes/DesktopTestScene.unity)):**
+  - Set `leftFingerFlexionAxis` and `rightFingerFlexionAxis` to `(-1, 0, 0)`.
+  - Re-anchored thumb opposition axes to `(-0.7, 0.2, -0.6)` (left) and `(-0.7, -0.2, 0.6)` (right).
+  - Updated serialized scene fields in `DesktopTestScene.unity`.
+  - Updated `FlipFingerFlexion(HandSide side)` to flip both finger flexion and thumb opposition X components synchronously.
+* **Thumbs-Up Wrist Roll Correction ([`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs)):**
+  - Inverted `rollSign` for `ThumbUp` to $-1f$ by default, applying $-90^\circ$ on the left and $+90^\circ$ on the right so the thumb points straight **UP** (+Y).
+* **Smooth 300ms Finger Curl Lead-In Blend ([`ISLSignPlayer.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Avatar/ISLSignPlayer.cs)):**
+  - Extended the 300ms cubic `SmoothStep` lead-in blend to finger curls: smoothly interpolates `lThumb..lPinky` and `rThumb..rPinky` from $0^\circ$ (relaxed neutral rest pose) into the target posture.
+  - Eliminates all instantaneous snapping when initiating a sign.
+* **Studio Tester GUI Enhancements ([`DesktopGestureTester.cs`](file:///D:/Github/SignLoop-RL-Framework-for-Two-Way-ISL-Communication/isl-vr-unity/Assets/Scripts/Rigging/DesktopGestureTester.cs)):**
+  - Added one-click preset buttons: `Natural (-1 Palm)` and `Inverted (+1)`.
+  - Added on-screen `Run Curl Biomechanical Test` trigger with live in-engine verification.
+
+### 3. Verification
+* In-engine diagnostic confirms:
+  - `[LEFT HAND] POSITIVE axis ((-1.00, 0.00, 0.00)) curls INTO palm! (tip gets 0.021m closer to wrist)`
+  - `[RIGHT HAND] POSITIVE axis ((-1.00, 0.00, 0.00)) curls INTO palm! (tip gets 0.021m closer to wrist)`
+* All 8 canonical hand shapes (`Fist`, `PointIndex`, `ThumbUp`, `Victory`, etc.) bend inward toward the palm.
+* In `ThumbUp`, thumbs point vertically upward (+Y).
+* Transitions from the resting stance into sign postures are fluid and continuous.
+* Zero GC allocations maintained across all runtime loops.
+

@@ -108,11 +108,11 @@ namespace SignLoop.Avatar
         private float _blendTimer = 0f;
         private const float BlendDuration = 0.3f; // smooth 300ms blend into sign
 
-        // Rest stance targets
-        private static readonly Vector3 RestLWrist = new Vector3(-0.25f, 0.90f, 0.20f);
-        private static readonly Vector3 RestRWrist = new Vector3(0.25f, 0.90f, 0.20f);
-        private static readonly Vector3 RestLElbow = new Vector3(-0.38f, 1.05f, -0.10f);
-        private static readonly Vector3 RestRElbow = new Vector3(0.38f, 1.05f, -0.10f);
+        // Natural anatomical rest stance targets (comfortably in front of waist/hips)
+        private static readonly Vector3 RestLWrist = new Vector3(-0.24f, 1.08f, 0.33f);
+        private static readonly Vector3 RestRWrist = new Vector3(0.24f, 1.08f, 0.33f);
+        private static readonly Vector3 RestLElbow = new Vector3(-0.42f, 1.15f, -0.15f);
+        private static readonly Vector3 RestRElbow = new Vector3(0.42f, 1.15f, -0.15f);
 
         public bool IsPlaying => _isPlaying;
         public bool IsPaused => _isPaused;
@@ -133,6 +133,21 @@ namespace SignLoop.Avatar
             }
         }
         public IReadOnlyList<string> AvailableSignNames => _availableSignNames;
+
+        // Active finger curls for GUI inspection
+        private float _curRThumb, _curRIndex, _curRMiddle, _curRRing, _curRPinky;
+        public float CurrentRightThumbCurl => _curRThumb;
+        public float CurrentRightIndexCurl => _curRIndex;
+        public float CurrentRightMiddleCurl => _curRMiddle;
+        public float CurrentRightRingCurl => _curRRing;
+        public float CurrentRightPinkyCurl => _curRPinky;
+
+        private float _curLThumb, _curLIndex, _curLMiddle, _curLRing, _curLPinky;
+        public float CurrentLeftThumbCurl => _curLThumb;
+        public float CurrentLeftIndexCurl => _curLIndex;
+        public float CurrentLeftMiddleCurl => _curLMiddle;
+        public float CurrentLeftRingCurl => _curLRing;
+        public float CurrentLeftPinkyCurl => _curLPinky;
 
         private void Awake()
         {
@@ -207,6 +222,7 @@ namespace SignLoop.Avatar
                 Debug.LogWarning($"[ISLSignPlayer] Direct disk clip load info: {ex.Message}");
             }
 
+            _availableSignNames.Sort(StringComparer.OrdinalIgnoreCase);
             Debug.Log($"<color=green>[ISLSignPlayer] Loaded {_clipLibrary.Count} authentic ISL sign clips.</color>");
         }
 
@@ -295,6 +311,8 @@ namespace SignLoop.Avatar
             {
                 armIK.SetLeftArmTarget(RestLWrist, Quaternion.identity);
                 armIK.SetRightArmTarget(RestRWrist, Quaternion.identity);
+                armIK.SetLeftElbowHint(RestLElbow);
+                armIK.SetRightElbowHint(RestRElbow);
                 armIK.ResetWristRollOffsets();
                 armIK.SetMatchWristRotation(false);
             }
@@ -304,6 +322,9 @@ namespace SignLoop.Avatar
                 handPose.SetCanonicalShape(HandSide.Left, CanonicalHandShape.Neutral);
                 handPose.SetCanonicalShape(HandSide.Right, CanonicalHandShape.Neutral);
             }
+
+            _curRThumb = _curRIndex = _curRMiddle = _curRRing = _curRPinky = 0f;
+            _curLThumb = _curLIndex = _curLMiddle = _curLRing = _curLPinky = 0f;
         }
 
         public void Pause() => _isPaused = true;
@@ -367,17 +388,6 @@ namespace SignLoop.Avatar
                 rawLRot = Quaternion.Slerp(frameA.leftWristRot.ToQuaternion(), frameB.leftWristRot.ToQuaternion(), frameFrac);
                 rawRRot = Quaternion.Slerp(frameA.rightWristRot.ToQuaternion(), frameB.rightWristRot.ToQuaternion(), frameFrac);
 
-                // Smooth lead-in blend from starting avatar pose
-                if (_blendTimer < BlendDuration)
-                {
-                    _blendTimer += Time.deltaTime;
-                    float blendFactor = Mathf.SmoothStep(0f, 1f, _blendTimer / BlendDuration);
-                    rawLWrist = Vector3.Lerp(_blendStartLWrist, rawLWrist, blendFactor);
-                    rawRWrist = Vector3.Lerp(_blendStartRWrist, rawRWrist, blendFactor);
-                    rawLElbow = Vector3.Lerp(_blendStartLElbow, rawLElbow, blendFactor);
-                    rawRElbow = Vector3.Lerp(_blendStartRElbow, rawRElbow, blendFactor);
-                }
-
                 lThumb = Mathf.Lerp(frameA.leftThumbCurl, frameB.leftThumbCurl, frameFrac);
                 lIndex = Mathf.Lerp(frameA.leftIndexCurl, frameB.leftIndexCurl, frameFrac);
                 lMiddle = Mathf.Lerp(frameA.leftMiddleCurl, frameB.leftMiddleCurl, frameFrac);
@@ -389,6 +399,30 @@ namespace SignLoop.Avatar
                 rMiddle = Mathf.Lerp(frameA.rightMiddleCurl, frameB.rightMiddleCurl, frameFrac);
                 rRing = Mathf.Lerp(frameA.rightRingCurl, frameB.rightRingCurl, frameFrac);
                 rPinky = Mathf.Lerp(frameA.rightPinkyCurl, frameB.rightPinkyCurl, frameFrac);
+
+                // Smooth lead-in blend from starting avatar pose
+                if (_blendTimer < BlendDuration)
+                {
+                    _blendTimer += Time.deltaTime;
+                    float blendFactor = Mathf.SmoothStep(0f, 1f, _blendTimer / BlendDuration);
+                    rawLWrist = Vector3.Lerp(_blendStartLWrist, rawLWrist, blendFactor);
+                    rawRWrist = Vector3.Lerp(_blendStartRWrist, rawRWrist, blendFactor);
+                    rawLElbow = Vector3.Lerp(_blendStartLElbow, rawLElbow, blendFactor);
+                    rawRElbow = Vector3.Lerp(_blendStartRElbow, rawRElbow, blendFactor);
+
+                    // Smoothly blend finger curls from starting rest stance (0 deg) to avoid sudden snapping
+                    lThumb = Mathf.Lerp(0f, lThumb, blendFactor);
+                    lIndex = Mathf.Lerp(0f, lIndex, blendFactor);
+                    lMiddle = Mathf.Lerp(0f, lMiddle, blendFactor);
+                    lRing = Mathf.Lerp(0f, lRing, blendFactor);
+                    lPinky = Mathf.Lerp(0f, lPinky, blendFactor);
+
+                    rThumb = Mathf.Lerp(0f, rThumb, blendFactor);
+                    rIndex = Mathf.Lerp(0f, rIndex, blendFactor);
+                    rMiddle = Mathf.Lerp(0f, rMiddle, blendFactor);
+                    rRing = Mathf.Lerp(0f, rRing, blendFactor);
+                    rPinky = Mathf.Lerp(0f, rPinky, blendFactor);
+                }
             }
             else if (_playheadTime < activeDuration + holdDuration)
             {
@@ -449,6 +483,18 @@ namespace SignLoop.Avatar
             // Apply to HandPoseController
             handPose.SetFingerCurls(HandSide.Left, lThumb, lIndex, lMiddle, lRing, lPinky);
             handPose.SetFingerCurls(HandSide.Right, rThumb, rIndex, rMiddle, rRing, rPinky);
+
+            _curRThumb = rThumb;
+            _curRIndex = rIndex;
+            _curRMiddle = rMiddle;
+            _curRRing = rRing;
+            _curRPinky = rPinky;
+
+            _curLThumb = lThumb;
+            _curLIndex = lIndex;
+            _curLMiddle = lMiddle;
+            _curLRing = lRing;
+            _curLPinky = lPinky;
         }
     }
 }

@@ -151,8 +151,8 @@ SignLoop-RL-Framework-for-Two-Way-ISL-Communication/
   - Drift-free analytical Two-Bone IK arm solver with per-frame bind-pose reset and anatomical forearm pronation/supination (`ArmIKController`).
   - Anatomically clamped 21-joint finger pose controller with mirrored knuckle flexion axes (`HandPoseController`).
   - 3-Phase ISL sign player: Active Trajectory (2.5s) $\to$ Apex Posture Hold (0.8s) $\to$ Smooth Return (0.5s) (`ISLSignPlayer`).
-  - Comprehensive desktop motion studio with mouse orbit/zoom, speed slider, reload buttons, and canonical handshape hotkeys (`DesktopGestureTester`).
-  - Exported 12 core ISL sign clips (`Hello`, `ThankYou`, `HowAreYou`, `GoodMorning`, `Doctor`, `Friend`, `Teacher`, `India`, `You`, `I`, `Sign`, `House`).
+  - Comprehensive desktop motion studio with mouse orbit/zoom, speed slider, reload buttons, live search, semantic categories, and canonical handshape hotkeys (`DesktopGestureTester`).
+  - Exported 80 authentic ISL sign clips across Greetings, Transportation, People & Family, Places, Professions, and Core Vocabulary.
 * [ ] **Stage 4: Edge Audio AI & Quest 3 VR Deployment**
   - whisper.cpp edge STT integration.
   - Piper TTS edge synthesis integration.

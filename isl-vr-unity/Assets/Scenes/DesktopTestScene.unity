@@ -580,11 +580,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::SignLoop.Rigging.HandPoseController
   slerpSpeed: 12
-  leftFingerFlexionAxis: {x: 1, y: 0, z: 0}
+  leftFingerFlexionAxis: {x: -1, y: 0, z: 0}
   rightFingerFlexionAxis: {x: -1, y: 0, z: 0}
-  leftThumbFlexionAxis: {x: 0.5, y: 0.8, z: 0.3}
-  rightThumbFlexionAxis: {x: -0.5, y: 0.8, z: 0.3}
-  curlMultiplier: 1.25
+  leftThumbFlexionAxis: {x: -0.7, y: 0.2, z: -0.6}
+  rightThumbFlexionAxis: {x: -0.7, y: -0.2, z: 0.6}
+  curlMultiplier: 1
 --- !u!114 &1327593408
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 #if ENABLE_INPUT_SYSTEM
 using UnityEngine.InputSystem;
@@ -51,6 +53,7 @@ namespace SignLoop.Rigging
         private void OnEnable()
         {
             FindDependencies();
+            SignLoop.Diagnostics.HandCurlDiagnostic.RunCheck();
         }
 
         private void FindDependencies()
@@ -243,7 +246,7 @@ namespace SignLoop.Rigging
                 if (shape == CanonicalHandShape.ThumbUp && armIK != null)
                 {
                     // Rotate wrists around forearm axis (pronation/supination) so thumbs point straight UP (+Y)
-                    float rollSign = _flipThumb180 ? -1f : 1f;
+                    float rollSign = _flipThumb180 ? 1f : -1f;
                     armIK.SetWristRollOffset(isLeft: true, 90f * rollSign);
                     armIK.SetWristRollOffset(isLeft: false, -90f * rollSign);
                     armIK.SetMatchWristRotation(false);
@@ -263,11 +266,123 @@ namespace SignLoop.Rigging
             }
         }
 
+        // ISL Categories & Sign Browser State
+        private int _selectedCategoryIndex = 0;
+        private static readonly string[] CategoryTabs = { "All", "Core", "Transit", "People", "Places", "Jobs", "Misc" };
+        private string _searchQuery = "";
+        private readonly List<string> _filteredSignsCache = new List<string>(80);
+
+        private static readonly HashSet<string> CoreCategory = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Hello", "ThankYou", "HowAreYou", "GoodMorning", "You", "I", "Sign", "India"
+        };
+
+        private static readonly HashSet<string> TransportCategory = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Plane", "Car", "Truck", "Bicycle", "Bus", "Boat", "Train", "TrainTicket", "Transportation"
+        };
+
+        private static readonly HashSet<string> PeopleCategory = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Baby", "Boy", "Girl", "Child", "Adult", "Man", "Woman", "Mother", "Father", "Parent",
+            "Son", "Daughter", "Brother", "Sister", "Family", "Grandfather", "Grandmother",
+            "Husband", "Wife", "Friend", "Neighbour", "King", "Queen", "President", "Crowd"
+        };
+
+        private static readonly HashSet<string> PlacesCategory = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "House", "City", "StreetOrRoad", "TrainStation", "Restaurant", "Court", "School",
+            "Office", "University", "Park", "StoreOrShop", "Library", "Hospital", "Temple",
+            "Market", "Bank", "Ground", "Location"
+        };
+
+        private static readonly HashSet<string> JobsCategory = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Doctor", "Teacher", "Student", "Lawyer", "Patient", "Waiter", "Police", "Soldier",
+            "Artist", "Author", "Manager", "Reporter", "Actor", "Secretary", "Priest", "Player", "Job"
+        };
+
+        private static readonly HashSet<string> MiscCategory = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "Bird", "SmallLittle", "Second"
+        };
+
+        private static readonly string[] FallbackSignCatalog = new string[]
+        {
+            "Actor", "Adult", "Artist", "Author", "Baby", "Bank", "Bicycle", "Bird", "Boat", "Boy",
+            "Brother", "Bus", "Car", "Child", "City", "Court", "Crowd", "Daughter", "Doctor", "Family",
+            "Father", "Friend", "Girl", "GoodMorning", "Grandfather", "Grandmother", "Ground", "Hello",
+            "Hospital", "House", "HowAreYou", "Husband", "I", "India", "Job", "King", "Lawyer",
+            "Library", "Location", "Man", "Manager", "Market", "Mother", "Neighbour", "Office", "Parent",
+            "Park", "Patient", "Plane", "Player", "Police", "President", "Priest", "Queen", "Reporter",
+            "Restaurant", "School", "Second", "Secretary", "Sign", "Sister", "SmallLittle", "Soldier",
+            "Son", "StoreOrShop", "StreetOrRoad", "Student", "Teacher", "Temple", "ThankYou",
+            "Train", "TrainStation", "TrainTicket", "Transportation", "Truck", "University", "Waiter",
+            "Wife", "Woman", "You"
+        };
+
+        private List<string> GetFilteredSigns()
+        {
+            _filteredSignsCache.Clear();
+            IReadOnlyList<string> sourceList = (signPlayer != null && signPlayer.AvailableSignNames.Count > 0)
+                ? signPlayer.AvailableSignNames
+                : FallbackSignCatalog;
+
+            for (int i = 0; i < sourceList.Count; i++)
+            {
+                string sign = sourceList[i];
+
+                if (_selectedCategoryIndex > 0)
+                {
+                    bool matchCat = false;
+                    switch (_selectedCategoryIndex)
+                    {
+                        case 1: matchCat = CoreCategory.Contains(sign); break;
+                        case 2: matchCat = TransportCategory.Contains(sign); break;
+                        case 3: matchCat = PeopleCategory.Contains(sign); break;
+                        case 4: matchCat = PlacesCategory.Contains(sign); break;
+                        case 5: matchCat = JobsCategory.Contains(sign); break;
+                        case 6: matchCat = MiscCategory.Contains(sign); break;
+                    }
+                    if (!matchCat) continue;
+                }
+
+                if (!string.IsNullOrEmpty(_searchQuery))
+                {
+                    if (sign.IndexOf(_searchQuery, StringComparison.OrdinalIgnoreCase) < 0)
+                        continue;
+                }
+
+                _filteredSignsCache.Add(sign);
+            }
+
+            return _filteredSignsCache;
+        }
+
+        private void DrawSignButton(string signName)
+        {
+            bool isCurrent = signPlayer != null && signPlayer.IsPlaying &&
+                             string.Equals(signPlayer.CurrentSignName, signName, StringComparison.OrdinalIgnoreCase);
+
+            Color prevColor = GUI.backgroundColor;
+            if (isCurrent) GUI.backgroundColor = new Color(0.3f, 0.85f, 1.0f);
+
+            if (GUILayout.Button(signName, GUILayout.Height(24)))
+            {
+                if (signPlayer != null)
+                {
+                    signPlayer.PlaySign(signName);
+                }
+            }
+
+            GUI.backgroundColor = prevColor;
+        }
+
         private void OnGUI()
         {
             GUI.depth = 0;
-            float panelHeight = Mathf.Min(650f, Screen.height - 30);
-            GUILayout.BeginArea(new Rect(15, 15, 320, panelHeight), "SignLoop ISL Motion Studio", GUI.skin.window);
+            float panelHeight = Mathf.Min(680f, Screen.height - 30);
+            GUILayout.BeginArea(new Rect(15, 15, 340, panelHeight), "SignLoop ISL Motion Studio", GUI.skin.window);
             _scrollPos = GUILayout.BeginScrollView(_scrollPos);
 
             // Display Quality Tip
@@ -275,14 +390,16 @@ namespace SignLoop.Rigging
             GUILayout.Space(4);
 
             // Section 1: Real ISL Sign Motion Clips
-            GUILayout.Label("<b>Authentic ISL Signs (Real Human Motion):</b>");
+            int totalSignCount = (signPlayer != null && signPlayer.AvailableSignNames.Count > 0) ? signPlayer.AvailableSignNames.Count : FallbackSignCatalog.Length;
+            GUILayout.Label($"<b>Authentic ISL Signs ({totalSignCount} Signs Available):</b>");
             if (signPlayer != null)
             {
                 if (signPlayer.IsPlaying)
                 {
                     GUILayout.Label($"<color=cyan><b>Sign:</b> {signPlayer.CurrentSignName}</color>");
                     GUILayout.Label($"<b>Phase:</b> <color=orange>{signPlayer.PlaybackPhaseText}</color>");
-                    Rect pRect = GUILayoutUtility.GetRect(290, 10);
+                    GUILayout.Label($"<b>R Curls:</b> T:{signPlayer.CurrentRightThumbCurl:F0}° I:{signPlayer.CurrentRightIndexCurl:F0}° M:{signPlayer.CurrentRightMiddleCurl:F0}° R:{signPlayer.CurrentRightRingCurl:F0}° P:{signPlayer.CurrentRightPinkyCurl:F0}°");
+                    Rect pRect = GUILayoutUtility.GetRect(300, 10);
                     GUI.HorizontalScrollbar(pRect, 0, signPlayer.NormalizedProgress, 0, 1);
 
                     GUILayout.BeginHorizontal();
@@ -320,23 +437,52 @@ namespace SignLoop.Rigging
                     signPlayer.LoadClipLibrary();
                 }
 
-                GUILayout.Space(4);
-                GUILayout.Label("Select Sign to Play:");
+                GUILayout.Space(6);
 
-                string[] commonSigns = { "Hello", "ThankYou", "HowAreYou", "GoodMorning", "Doctor", "Friend", "Teacher", "India", "You", "House" };
-                for (int i = 0; i < commonSigns.Length; i += 2)
+                // Search Bar
+                GUILayout.BeginHorizontal();
+                GUILayout.Label("<b>Search:</b>", GUILayout.Width(52));
+                _searchQuery = GUILayout.TextField(_searchQuery);
+                if (!string.IsNullOrEmpty(_searchQuery) && GUILayout.Button("✕", GUILayout.Width(22)))
+                {
+                    _searchQuery = "";
+                }
+                GUILayout.EndHorizontal();
+
+                // Category Filter Buttons
+                GUILayout.Space(2);
+                GUILayout.BeginHorizontal();
+                for (int c = 0; c < 4; c++)
+                {
+                    Color prevBg = GUI.backgroundColor;
+                    if (_selectedCategoryIndex == c) GUI.backgroundColor = new Color(0.3f, 0.85f, 1.0f);
+                    if (GUILayout.Button(CategoryTabs[c])) _selectedCategoryIndex = c;
+                    GUI.backgroundColor = prevBg;
+                }
+                GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                for (int c = 4; c < CategoryTabs.Length; c++)
+                {
+                    Color prevBg = GUI.backgroundColor;
+                    if (_selectedCategoryIndex == c) GUI.backgroundColor = new Color(0.3f, 0.85f, 1.0f);
+                    if (GUILayout.Button(CategoryTabs[c])) _selectedCategoryIndex = c;
+                    GUI.backgroundColor = prevBg;
+                }
+                GUILayout.EndHorizontal();
+
+                // Filtered Sign Button Grid (2 columns)
+                List<string> filtered = GetFilteredSigns();
+                GUILayout.Space(4);
+                GUILayout.Label($"<b>Select Sign ({filtered.Count}):</b>");
+
+                for (int i = 0; i < filtered.Count; i += 2)
                 {
                     GUILayout.BeginHorizontal();
-                    if (GUILayout.Button(commonSigns[i]))
+                    DrawSignButton(filtered[i]);
+                    if (i + 1 < filtered.Count)
                     {
-                        signPlayer.PlaySign(commonSigns[i]);
-                    }
-                    if (i + 1 < commonSigns.Length)
-                    {
-                        if (GUILayout.Button(commonSigns[i + 1]))
-                        {
-                            signPlayer.PlaySign(commonSigns[i + 1]);
-                        }
+                        DrawSignButton(filtered[i + 1]);
                     }
                     GUILayout.EndHorizontal();
                 }
@@ -354,6 +500,7 @@ namespace SignLoop.Rigging
             GUILayout.Label("<b>Finger Curls & Posture Sensitivity:</b>");
             if (handPose != null)
             {
+                GUILayout.Label($"<b>Flexion Axes:</b> L={handPose.LeftFingerFlexionAxis.x:F0} | R={handPose.RightFingerFlexionAxis.x:F0}");
                 GUILayout.BeginHorizontal();
                 GUILayout.Label($"<b>Curl Scale:</b> {handPose.CurlMultiplier:F2}x", GUILayout.Width(100));
                 handPose.CurlMultiplier = GUILayout.HorizontalSlider(handPose.CurlMultiplier, 0.5f, 2.5f);
@@ -363,6 +510,28 @@ namespace SignLoop.Rigging
                 if (GUILayout.Button("Invert L Curls")) handPose.FlipFingerFlexion(HandSide.Left);
                 if (GUILayout.Button("Invert R Curls")) handPose.FlipFingerFlexion(HandSide.Right);
                 GUILayout.EndHorizontal();
+
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("Natural (-1 Palm)"))
+                {
+                    handPose.LeftFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
+                    handPose.RightFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
+                    handPose.LeftThumbFlexionAxis = new Vector3(-0.7f, 0.2f, -0.6f);
+                    handPose.RightThumbFlexionAxis = new Vector3(-0.7f, -0.2f, 0.6f);
+                }
+                if (GUILayout.Button("Inverted (+1)"))
+                {
+                    handPose.LeftFingerFlexionAxis = new Vector3(1f, 0f, 0f);
+                    handPose.RightFingerFlexionAxis = new Vector3(1f, 0f, 0f);
+                    handPose.LeftThumbFlexionAxis = new Vector3(0.7f, 0.2f, 0.6f);
+                    handPose.RightThumbFlexionAxis = new Vector3(0.7f, -0.2f, -0.6f);
+                }
+                GUILayout.EndHorizontal();
+
+                if (GUILayout.Button("🔍 Run Curl Biomechanical Test"))
+                {
+                    SignLoop.Diagnostics.HandCurlDiagnostic.RunCheck();
+                }
             }
 
             GUILayout.Space(4);

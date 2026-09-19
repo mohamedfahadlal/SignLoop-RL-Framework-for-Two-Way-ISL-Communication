@@ -36,23 +36,25 @@ namespace SignLoop.Rigging
         [SerializeField] private float slerpSpeed = 28f;
 
         [Header("Anatomical Biomechanical Limits")]
-        [Tooltip("Flexion axis for Left hand fingers (default: local +X).")]
-        [SerializeField] private Vector3 leftFingerFlexionAxis = new Vector3(1f, 0f, 0f);
-        [Tooltip("Flexion axis for Right hand fingers (mirrored: local -X).")]
+        [Tooltip("Flexion axis for Left hand fingers (local -X bends into palm in Avaturn humanoid rig).")]
+        [SerializeField] private Vector3 leftFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
+        [Tooltip("Flexion axis for Right hand fingers (local -X bends into palm in Avaturn humanoid rig).")]
         [SerializeField] private Vector3 rightFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
 
         [Tooltip("Thumb abduction/flexion axis for Left hand.")]
-        [SerializeField] private Vector3 leftThumbFlexionAxis = new Vector3(0.5f, 0.8f, 0.3f);
+        [SerializeField] private Vector3 leftThumbFlexionAxis = new Vector3(-0.7f, 0.2f, -0.6f);
         [Tooltip("Thumb abduction/flexion axis for Right hand.")]
-        [SerializeField] private Vector3 rightThumbFlexionAxis = new Vector3(-0.5f, 0.8f, 0.3f);
+        [SerializeField] private Vector3 rightThumbFlexionAxis = new Vector3(-0.7f, -0.2f, 0.6f);
 
-        [Tooltip("Global multiplier to exaggerate subtle finger curls (default 1.25x).")]
-        [Range(0.5f, 2.5f)]
-        [SerializeField] private float curlMultiplier = 1.25f;
+        [Tooltip("Global multiplier for finger curls (default 1.0x).")]
+        [Range(0.5f, 2.0f)]
+        [SerializeField] private float curlMultiplier = 1.0f;
 
-        public float CurlMultiplier { get => curlMultiplier; set => curlMultiplier = Mathf.Clamp(value, 0.5f, 2.5f); }
+        public float CurlMultiplier { get => curlMultiplier; set => curlMultiplier = Mathf.Clamp(value, 0.5f, 2.0f); }
         public Vector3 LeftFingerFlexionAxis { get => leftFingerFlexionAxis; set => leftFingerFlexionAxis = value; }
         public Vector3 RightFingerFlexionAxis { get => rightFingerFlexionAxis; set => rightFingerFlexionAxis = value; }
+        public Vector3 LeftThumbFlexionAxis { get => leftThumbFlexionAxis; set => leftThumbFlexionAxis = value; }
+        public Vector3 RightThumbFlexionAxis { get => rightThumbFlexionAxis; set => rightThumbFlexionAxis = value; }
 
         // Bone references
         private readonly Transform[] _leftBones = new Transform[JointCountPerHand];
@@ -164,8 +166,16 @@ namespace SignLoop.Rigging
 
         public void FlipFingerFlexion(HandSide side)
         {
-            if (side == HandSide.Left) leftFingerFlexionAxis = -leftFingerFlexionAxis;
-            else rightFingerFlexionAxis = -rightFingerFlexionAxis;
+            if (side == HandSide.Left)
+            {
+                leftFingerFlexionAxis = -leftFingerFlexionAxis;
+                leftThumbFlexionAxis = new Vector3(-leftThumbFlexionAxis.x, leftThumbFlexionAxis.y, leftThumbFlexionAxis.z);
+            }
+            else
+            {
+                rightFingerFlexionAxis = -rightFingerFlexionAxis;
+                rightThumbFlexionAxis = new Vector3(-rightThumbFlexionAxis.x, rightThumbFlexionAxis.y, rightThumbFlexionAxis.z);
+            }
             Debug.Log($"[HandPoseController] Inverted {side} finger flexion axis to: {(side == HandSide.Left ? leftFingerFlexionAxis : rightFingerFlexionAxis)}");
         }
 
@@ -229,87 +239,93 @@ namespace SignLoop.Rigging
         /// <summary>
         /// Sets individual finger curl angles (0 to 85 deg) directly, strictly clamped to human biomechanical limits.
         /// Zero GC allocations. Ideal for driving procedural hands from skeletal keypoint streams.
+        /// Applies hierarchical anatomical joint distribution: MCP (35%), PIP (50%), DIP (35%)
+        /// so fingers curl naturally into the palm without impossible hyperextension or self-intersection.
         /// </summary>
         public void SetFingerCurls(HandSide side, float thumbDeg, float indexDeg, float middleDeg, float ringDeg, float pinkyDeg)
         {
             Quaternion[] target = (side == HandSide.Left) ? _leftTargetRotations : _rightTargetRotations;
             Quaternion[] neutral = (side == HandSide.Left) ? _leftNeutralRotations : _rightNeutralRotations;
-            Vector3 fAxis = (side == HandSide.Left) ? leftFingerFlexionAxis : rightFingerFlexionAxis;
-            Vector3 tAxis = (side == HandSide.Left) ? leftThumbFlexionAxis : rightThumbFlexionAxis;
+            Vector3 fAxis = (side == HandSide.Left) ? leftFingerFlexionAxis.normalized : rightFingerFlexionAxis.normalized;
+            Vector3 tAxis = (side == HandSide.Left) ? leftThumbFlexionAxis.normalized : rightThumbFlexionAxis.normalized;
 
-            float clampedThumb = Mathf.Clamp(thumbDeg * curlMultiplier, 0f, 65f);
-            float clampedIndex = Mathf.Clamp(indexDeg * curlMultiplier, 0f, 85f);
-            float clampedMiddle = Mathf.Clamp(middleDeg * curlMultiplier, 0f, 85f);
-            float clampedRing = Mathf.Clamp(ringDeg * curlMultiplier, 0f, 85f);
-            float clampedPinky = Mathf.Clamp(pinkyDeg * curlMultiplier, 0f, 85f);
+            // Strict anatomical positive clamping: flexion ONLY towards palm, 0 to human joint limits
+            float cThumb = Mathf.Clamp(thumbDeg * curlMultiplier, 0f, 65f);
+            float cIndex = Mathf.Clamp(indexDeg * curlMultiplier, 0f, 85f);
+            float cMiddle = Mathf.Clamp(middleDeg * curlMultiplier, 0f, 85f);
+            float cRing = Mathf.Clamp(ringDeg * curlMultiplier, 0f, 85f);
+            float cPinky = Mathf.Clamp(pinkyDeg * curlMultiplier, 0f, 85f);
 
-            Quaternion thumbCurl = Quaternion.AngleAxis(clampedThumb, tAxis.normalized);
-            Quaternion indexCurl = Quaternion.AngleAxis(clampedIndex, fAxis.normalized);
-            Quaternion middleCurl = Quaternion.AngleAxis(clampedMiddle, fAxis.normalized);
-            Quaternion ringCurl = Quaternion.AngleAxis(clampedRing, fAxis.normalized);
-            Quaternion pinkyCurl = Quaternion.AngleAxis(clampedPinky, fAxis.normalized);
+            // --- THUMB: 3-Joint Anatomical Opposition & Flexion ---
+            float tCMC = cThumb * 0.30f;
+            float tMCP = cThumb * 0.45f;
+            float tIP = cThumb * 0.35f;
+            target[AvatarBoneMapping.ThumbCMC] = neutral[AvatarBoneMapping.ThumbCMC] * Quaternion.AngleAxis(tCMC, tAxis);
+            target[AvatarBoneMapping.ThumbMCP] = neutral[AvatarBoneMapping.ThumbMCP] * Quaternion.AngleAxis(tMCP, tAxis);
+            target[AvatarBoneMapping.ThumbIP] = neutral[AvatarBoneMapping.ThumbIP] * Quaternion.AngleAxis(tIP, tAxis);
 
-            // Thumb joints
-            target[AvatarBoneMapping.ThumbCMC] = neutral[AvatarBoneMapping.ThumbCMC] * thumbCurl;
-            target[AvatarBoneMapping.ThumbMCP] = neutral[AvatarBoneMapping.ThumbMCP] * thumbCurl;
-            target[AvatarBoneMapping.ThumbIP] = neutral[AvatarBoneMapping.ThumbIP] * thumbCurl;
+            // --- INDEX FINGER: Knuckle (35%), PIP (50%), DIP (35%) ---
+            target[AvatarBoneMapping.IndexMCP] = neutral[AvatarBoneMapping.IndexMCP] * Quaternion.AngleAxis(cIndex * 0.35f, fAxis);
+            target[AvatarBoneMapping.IndexPIP] = neutral[AvatarBoneMapping.IndexPIP] * Quaternion.AngleAxis(cIndex * 0.50f, fAxis);
+            target[AvatarBoneMapping.IndexDIP] = neutral[AvatarBoneMapping.IndexDIP] * Quaternion.AngleAxis(cIndex * 0.35f, fAxis);
 
-            // Index joints
-            target[AvatarBoneMapping.IndexMCP] = neutral[AvatarBoneMapping.IndexMCP] * indexCurl;
-            target[AvatarBoneMapping.IndexPIP] = neutral[AvatarBoneMapping.IndexPIP] * indexCurl;
-            target[AvatarBoneMapping.IndexDIP] = neutral[AvatarBoneMapping.IndexDIP] * indexCurl;
+            // --- MIDDLE FINGER ---
+            target[AvatarBoneMapping.MiddleMCP] = neutral[AvatarBoneMapping.MiddleMCP] * Quaternion.AngleAxis(cMiddle * 0.35f, fAxis);
+            target[AvatarBoneMapping.MiddlePIP] = neutral[AvatarBoneMapping.MiddlePIP] * Quaternion.AngleAxis(cMiddle * 0.50f, fAxis);
+            target[AvatarBoneMapping.MiddleDIP] = neutral[AvatarBoneMapping.MiddleDIP] * Quaternion.AngleAxis(cMiddle * 0.35f, fAxis);
 
-            // Middle joints
-            target[AvatarBoneMapping.MiddleMCP] = neutral[AvatarBoneMapping.MiddleMCP] * middleCurl;
-            target[AvatarBoneMapping.MiddlePIP] = neutral[AvatarBoneMapping.MiddlePIP] * middleCurl;
-            target[AvatarBoneMapping.MiddleDIP] = neutral[AvatarBoneMapping.MiddleDIP] * middleCurl;
+            // --- RING FINGER ---
+            target[AvatarBoneMapping.RingMCP] = neutral[AvatarBoneMapping.RingMCP] * Quaternion.AngleAxis(cRing * 0.35f, fAxis);
+            target[AvatarBoneMapping.RingPIP] = neutral[AvatarBoneMapping.RingPIP] * Quaternion.AngleAxis(cRing * 0.50f, fAxis);
+            target[AvatarBoneMapping.RingDIP] = neutral[AvatarBoneMapping.RingDIP] * Quaternion.AngleAxis(cRing * 0.35f, fAxis);
 
-            // Ring joints
-            target[AvatarBoneMapping.RingMCP] = neutral[AvatarBoneMapping.RingMCP] * ringCurl;
-            target[AvatarBoneMapping.RingPIP] = neutral[AvatarBoneMapping.RingPIP] * ringCurl;
-            target[AvatarBoneMapping.RingDIP] = neutral[AvatarBoneMapping.RingDIP] * ringCurl;
-
-            // Pinky joints
-            target[AvatarBoneMapping.PinkyMCP] = neutral[AvatarBoneMapping.PinkyMCP] * pinkyCurl;
-            target[AvatarBoneMapping.PinkyPIP] = neutral[AvatarBoneMapping.PinkyPIP] * pinkyCurl;
-            target[AvatarBoneMapping.PinkyDIP] = neutral[AvatarBoneMapping.PinkyDIP] * pinkyCurl;
+            // --- PINKY FINGER ---
+            target[AvatarBoneMapping.PinkyMCP] = neutral[AvatarBoneMapping.PinkyMCP] * Quaternion.AngleAxis(cPinky * 0.35f, fAxis);
+            target[AvatarBoneMapping.PinkyPIP] = neutral[AvatarBoneMapping.PinkyPIP] * Quaternion.AngleAxis(cPinky * 0.50f, fAxis);
+            target[AvatarBoneMapping.PinkyDIP] = neutral[AvatarBoneMapping.PinkyDIP] * Quaternion.AngleAxis(cPinky * 0.35f, fAxis);
         }
 
         private void ApplyAnatomicalCurl(HandSide side, Quaternion[] target, Quaternion[] neutral, float fingerCurlDeg, float thumbCurlDeg)
         {
-            Vector3 fAxis = (side == HandSide.Left) ? leftFingerFlexionAxis : rightFingerFlexionAxis;
-            Vector3 tAxis = (side == HandSide.Left) ? leftThumbFlexionAxis : rightThumbFlexionAxis;
+            Vector3 fAxis = (side == HandSide.Left) ? leftFingerFlexionAxis.normalized : rightFingerFlexionAxis.normalized;
+            Vector3 tAxis = (side == HandSide.Left) ? leftThumbFlexionAxis.normalized : rightThumbFlexionAxis.normalized;
 
-            float clampedFinger = Mathf.Clamp(fingerCurlDeg * curlMultiplier, 0f, 85f);
-            float clampedThumb = Mathf.Clamp(thumbCurlDeg * curlMultiplier, 0f, 65f);
-
-            Quaternion fingerCurl = Quaternion.AngleAxis(clampedFinger, fAxis.normalized);
-            Quaternion thumbCurl = Quaternion.AngleAxis(clampedThumb, tAxis.normalized);
+            float cFinger = Mathf.Clamp(fingerCurlDeg * curlMultiplier, 0f, 85f);
+            float cThumb = Mathf.Clamp(thumbCurlDeg * curlMultiplier, 0f, 65f);
 
             // Thumb joints
-            target[AvatarBoneMapping.ThumbCMC] = neutral[AvatarBoneMapping.ThumbCMC] * thumbCurl;
-            target[AvatarBoneMapping.ThumbMCP] = neutral[AvatarBoneMapping.ThumbMCP] * thumbCurl;
-            target[AvatarBoneMapping.ThumbIP] = neutral[AvatarBoneMapping.ThumbIP] * thumbCurl;
+            target[AvatarBoneMapping.ThumbCMC] = neutral[AvatarBoneMapping.ThumbCMC] * Quaternion.AngleAxis(cThumb * 0.30f, tAxis);
+            target[AvatarBoneMapping.ThumbMCP] = neutral[AvatarBoneMapping.ThumbMCP] * Quaternion.AngleAxis(cThumb * 0.45f, tAxis);
+            target[AvatarBoneMapping.ThumbIP] = neutral[AvatarBoneMapping.ThumbIP] * Quaternion.AngleAxis(cThumb * 0.35f, tAxis);
 
-            // Index joints
-            target[AvatarBoneMapping.IndexMCP] = neutral[AvatarBoneMapping.IndexMCP] * fingerCurl;
-            target[AvatarBoneMapping.IndexPIP] = neutral[AvatarBoneMapping.IndexPIP] * fingerCurl;
-            target[AvatarBoneMapping.IndexDIP] = neutral[AvatarBoneMapping.IndexDIP] * fingerCurl;
+            // 4 Fingers
+            float mcpRot = cFinger * 0.35f;
+            float pipRot = cFinger * 0.50f;
+            float dipRot = cFinger * 0.35f;
 
-            // Middle joints
-            target[AvatarBoneMapping.MiddleMCP] = neutral[AvatarBoneMapping.MiddleMCP] * fingerCurl;
-            target[AvatarBoneMapping.MiddlePIP] = neutral[AvatarBoneMapping.MiddlePIP] * fingerCurl;
-            target[AvatarBoneMapping.MiddleDIP] = neutral[AvatarBoneMapping.MiddleDIP] * fingerCurl;
+            Quaternion qMCP = Quaternion.AngleAxis(mcpRot, fAxis);
+            Quaternion qPIP = Quaternion.AngleAxis(pipRot, fAxis);
+            Quaternion qDIP = Quaternion.AngleAxis(dipRot, fAxis);
 
-            // Ring joints
-            target[AvatarBoneMapping.RingMCP] = neutral[AvatarBoneMapping.RingMCP] * fingerCurl;
-            target[AvatarBoneMapping.RingPIP] = neutral[AvatarBoneMapping.RingPIP] * fingerCurl;
-            target[AvatarBoneMapping.RingDIP] = neutral[AvatarBoneMapping.RingDIP] * fingerCurl;
+            // Index
+            target[AvatarBoneMapping.IndexMCP] = neutral[AvatarBoneMapping.IndexMCP] * qMCP;
+            target[AvatarBoneMapping.IndexPIP] = neutral[AvatarBoneMapping.IndexPIP] * qPIP;
+            target[AvatarBoneMapping.IndexDIP] = neutral[AvatarBoneMapping.IndexDIP] * qDIP;
 
-            // Pinky joints
-            target[AvatarBoneMapping.PinkyMCP] = neutral[AvatarBoneMapping.PinkyMCP] * fingerCurl;
-            target[AvatarBoneMapping.PinkyPIP] = neutral[AvatarBoneMapping.PinkyPIP] * fingerCurl;
-            target[AvatarBoneMapping.PinkyDIP] = neutral[AvatarBoneMapping.PinkyDIP] * fingerCurl;
+            // Middle
+            target[AvatarBoneMapping.MiddleMCP] = neutral[AvatarBoneMapping.MiddleMCP] * qMCP;
+            target[AvatarBoneMapping.MiddlePIP] = neutral[AvatarBoneMapping.MiddlePIP] * qPIP;
+            target[AvatarBoneMapping.MiddleDIP] = neutral[AvatarBoneMapping.MiddleDIP] * qDIP;
+
+            // Ring
+            target[AvatarBoneMapping.RingMCP] = neutral[AvatarBoneMapping.RingMCP] * qMCP;
+            target[AvatarBoneMapping.RingPIP] = neutral[AvatarBoneMapping.RingPIP] * qPIP;
+            target[AvatarBoneMapping.RingDIP] = neutral[AvatarBoneMapping.RingDIP] * qDIP;
+
+            // Pinky
+            target[AvatarBoneMapping.PinkyMCP] = neutral[AvatarBoneMapping.PinkyMCP] * qMCP;
+            target[AvatarBoneMapping.PinkyPIP] = neutral[AvatarBoneMapping.PinkyPIP] * qPIP;
+            target[AvatarBoneMapping.PinkyDIP] = neutral[AvatarBoneMapping.PinkyDIP] * qDIP;
         }
 
         public void SnapToNeutral()

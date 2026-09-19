@@ -279,6 +279,22 @@ namespace SignLoop.Rigging
             mid.localRotation = bindMidRot;
             tip.localRotation = bindTipRot;
 
+            // 2. Anatomical Torso & Pelvis Clearance (strictly prevents IK targets from entering avatar mesh)
+            Vector3 localTarget = transform.InverseTransformPoint(targetPos);
+            float torsoHalfWidth = 0.24f; // covers chest, ribcage, abdomen, and pelvis
+            float minSafeZ = (localTarget.y < 1.45f) ? 0.28f : 0.20f;
+
+            if (Mathf.Abs(localTarget.x) < torsoHalfWidth && localTarget.z < minSafeZ)
+            {
+                localTarget.z = minSafeZ;
+                targetPos = transform.TransformPoint(localTarget);
+            }
+            if (localTarget.y < 1.00f)
+            {
+                localTarget.y = 1.00f;
+                targetPos = transform.TransformPoint(localTarget);
+            }
+
             Vector3 a = root.position;
             Vector3 at = targetPos - a;
             float distAT = at.magnitude;
