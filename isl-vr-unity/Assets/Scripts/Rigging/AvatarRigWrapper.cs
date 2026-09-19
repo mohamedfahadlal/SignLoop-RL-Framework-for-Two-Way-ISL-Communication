@@ -89,9 +89,9 @@ namespace SignLoop.Rigging
 
             // 2. Search all SkinnedMeshRenderers
             var smrs = container.GetComponentsInChildren<SkinnedMeshRenderer>();
-            for (int i = 0; i < smrs.Length; i++)
+            if (smrs.Length > 0)
             {
-                Transform t = smrs[i].transform;
+                Transform t = smrs[0].transform;
                 while (t.parent != null && t.parent != container && t.parent != transform)
                 {
                     t = t.parent;
