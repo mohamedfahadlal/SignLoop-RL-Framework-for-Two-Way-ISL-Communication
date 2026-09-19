@@ -330,3 +330,4 @@ This document records the chronological history of work completed across session
 * Transitions from the resting stance into sign postures are fluid and continuous.
 * Zero GC allocations maintained across all runtime loops.
 
+* **Compiler Warnings Resolved:** Fixed \CS0162: Unreachable code detected\ in \AvatarRigWrapper.cs\ by replacing an unconditional return inside a \or\ loop with a clean \if\ evaluation block.
