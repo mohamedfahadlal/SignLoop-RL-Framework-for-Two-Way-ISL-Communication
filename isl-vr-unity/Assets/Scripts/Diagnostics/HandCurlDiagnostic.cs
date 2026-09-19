@@ -61,96 +61,33 @@ namespace SignLoop.Diagnostics
                 ? bones[SignLoop.Rigging.AvatarBoneMapping.IndexTip]
                 : ((dip != null) ? dip : pip);
 
-            Transform thumbCMC = bones[SignLoop.Rigging.AvatarBoneMapping.ThumbCMC];
-            Transform thumbMCP = bones[SignLoop.Rigging.AvatarBoneMapping.ThumbMCP];
-            Transform thumbIP = bones[SignLoop.Rigging.AvatarBoneMapping.ThumbIP];
-            Transform thumbTip = (bones[SignLoop.Rigging.AvatarBoneMapping.ThumbTip] != null)
-                ? bones[SignLoop.Rigging.AvatarBoneMapping.ThumbTip]
-                : thumbIP;
-            Transform middleMCP = bones[SignLoop.Rigging.AvatarBoneMapping.MiddleMCP];
-
             if (mcp == null || pip == null || wrist == null) return;
 
-            // 1. TEST FINGERS (Index)
             Vector3 wristPos = wrist.position;
             Vector3 tipNeutralPos = tip.position;
-
+            float distNeutral = Vector3.Distance(tipNeutralPos, wristPos);
+            
             Quaternion origMCP = mcp.localRotation;
             Quaternion origPIP = pip.localRotation;
             Quaternion origDIP = (dip != null) ? dip.localRotation : Quaternion.identity;
 
-            // Flex +60 deg with fAxis
-            mcp.localRotation = origMCP * Quaternion.AngleAxis(60f * 0.35f, fAxis);
-            pip.localRotation = origPIP * Quaternion.AngleAxis(60f * 0.50f, fAxis);
-            if (dip != null) dip.localRotation = origDIP * Quaternion.AngleAxis(60f * 0.35f, fAxis);
-            Vector3 tipCurledPos = tip.position;
+            Vector3[] testAxes = { Vector3.right, Vector3.left, Vector3.up, Vector3.down, Vector3.forward, Vector3.back };
+            
+            Debug.Log($"[{sideName} FINGER] Tip->Wrist Neutral: {distNeutral:F3}m");
+            
+            foreach (var axis in testAxes)
+            {
+                mcp.localRotation = origMCP * Quaternion.AngleAxis(80f * 0.35f, axis);
+                pip.localRotation = origPIP * Quaternion.AngleAxis(80f * 0.50f, axis);
+                if (dip != null) dip.localRotation = origDIP * Quaternion.AngleAxis(80f * 0.35f, axis);
+                
+                float dist = Vector3.Distance(tip.position, wrist.position);
+                Debug.Log($"[{sideName}] Axis {axis}: Dist={dist:F3}m (Delta={dist - distNeutral:F3}m)");
+            }
 
-            // Flex -60 deg with fAxis
-            mcp.localRotation = origMCP * Quaternion.AngleAxis(-60f * 0.35f, fAxis);
-            pip.localRotation = origPIP * Quaternion.AngleAxis(-60f * 0.50f, fAxis);
-            if (dip != null) dip.localRotation = origDIP * Quaternion.AngleAxis(-60f * 0.35f, fAxis);
-            Vector3 tipNegPos = tip.position;
-
-            // Restore finger
             mcp.localRotation = origMCP;
             pip.localRotation = origPIP;
             if (dip != null) dip.localRotation = origDIP;
-
-            float distNeutral = Vector3.Distance(tipNeutralPos, wristPos);
-            float distCurledPos = Vector3.Distance(tipCurledPos, wristPos);
-            float distCurledNeg = Vector3.Distance(tipNegPos, wristPos);
-
-            Debug.Log($"[{sideName} FINGER] Axis: {fAxis} | Tip->Wrist Neutral: {distNeutral:F3}m | (+Axis): {distCurledPos:F3}m | (-Axis): {distCurledNeg:F3}m");
-            if (distCurledPos < distNeutral && distCurledPos < distCurledNeg)
-            {
-                Debug.Log($"<color=green>[{sideName} FINGER] POSITIVE axis ({fAxis}) curls INTO palm! (tip gets {distNeutral - distCurledPos:F3}m closer to wrist)</color>");
-            }
-            else if (distCurledNeg < distNeutral && distCurledNeg < distCurledPos)
-            {
-                Debug.Log($"<color=red>[{sideName} FINGER] NEGATIVE axis ({-fAxis}) curls INTO palm! POSITIVE curls BACKWARDS/HYPEREXTENDS!</color>");
-            }
-
-            // 2. TEST THUMB (ThumbTip to MiddleMCP/Palm Center)
-            if (thumbCMC != null && thumbMCP != null && thumbIP != null && middleMCP != null)
-            {
-                Vector3 palmRef = middleMCP.position;
-                Vector3 tTipNeutral = thumbTip.position;
-
-                Quaternion origTCMC = thumbCMC.localRotation;
-                Quaternion origTMCP = thumbMCP.localRotation;
-                Quaternion origTIP = thumbIP.localRotation;
-
-                // Flex +50 deg with tAxis
-                thumbCMC.localRotation = origTCMC * Quaternion.AngleAxis(50f * 0.30f, tAxis);
-                thumbMCP.localRotation = origTMCP * Quaternion.AngleAxis(50f * 0.45f, tAxis);
-                thumbIP.localRotation = origTIP * Quaternion.AngleAxis(50f * 0.35f, tAxis);
-                Vector3 tTipPos = thumbTip.position;
-
-                // Flex -50 deg with tAxis
-                thumbCMC.localRotation = origTCMC * Quaternion.AngleAxis(-50f * 0.30f, tAxis);
-                thumbMCP.localRotation = origTMCP * Quaternion.AngleAxis(-50f * 0.45f, tAxis);
-                thumbIP.localRotation = origTIP * Quaternion.AngleAxis(-50f * 0.35f, tAxis);
-                Vector3 tTipNeg = thumbTip.position;
-
-                // Restore thumb
-                thumbCMC.localRotation = origTCMC;
-                thumbMCP.localRotation = origTMCP;
-                thumbIP.localRotation = origTIP;
-
-                float tDistNeutral = Vector3.Distance(tTipNeutral, palmRef);
-                float tDistPos = Vector3.Distance(tTipPos, palmRef);
-                float tDistNeg = Vector3.Distance(tTipNeg, palmRef);
-
-                Debug.Log($"[{sideName} THUMB] Axis: {tAxis} | Tip->Palm Neutral: {tDistNeutral:F3}m | (+Axis): {tDistPos:F3}m | (-Axis): {tDistNeg:F3}m");
-                if (tDistPos < tDistNeutral && tDistPos < tDistNeg)
-                {
-                    Debug.Log($"<color=green>[{sideName} THUMB] POSITIVE axis ({tAxis}) opposes INTO palm! (tip gets {tDistNeutral - tDistPos:F3}m closer to palm)</color>");
-                }
-                else if (tDistNeg < tDistNeutral && tDistNeg < tDistPos)
-                {
-                    Debug.Log($"<color=red>[{sideName} THUMB] NEGATIVE axis ({-tAxis}) opposes INTO palm! POSITIVE abducts away!</color>");
-                }
-            }
         }
     }
 }

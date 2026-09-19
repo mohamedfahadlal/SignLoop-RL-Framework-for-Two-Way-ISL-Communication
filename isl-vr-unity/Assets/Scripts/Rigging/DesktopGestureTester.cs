@@ -512,17 +512,17 @@ namespace SignLoop.Rigging
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Natural (-1 Palm)"))
-                {
-                    handPose.LeftFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
-                    handPose.RightFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
-                    handPose.LeftThumbFlexionAxis = new Vector3(0.7f, -0.2f, 0.6f);
-                    handPose.RightThumbFlexionAxis = new Vector3(0.7f, 0.2f, -0.6f);
-                }
-                if (GUILayout.Button("Inverted (+1)"))
+                if (GUILayout.Button("Natural (+1 Palm)"))
                 {
                     handPose.LeftFingerFlexionAxis = new Vector3(1f, 0f, 0f);
                     handPose.RightFingerFlexionAxis = new Vector3(1f, 0f, 0f);
+                    handPose.LeftThumbFlexionAxis = new Vector3(0.7f, -0.2f, 0.6f);
+                    handPose.RightThumbFlexionAxis = new Vector3(0.7f, 0.2f, -0.6f);
+                }
+                if (GUILayout.Button("Inverted (-1)"))
+                {
+                    handPose.LeftFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
+                    handPose.RightFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
                     handPose.LeftThumbFlexionAxis = new Vector3(-0.7f, 0.2f, -0.6f);
                     handPose.RightThumbFlexionAxis = new Vector3(-0.7f, -0.2f, 0.6f);
                 }

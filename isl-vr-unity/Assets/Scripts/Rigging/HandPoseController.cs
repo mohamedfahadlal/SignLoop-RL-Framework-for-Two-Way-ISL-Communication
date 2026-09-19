@@ -36,10 +36,10 @@ namespace SignLoop.Rigging
         [SerializeField] private float slerpSpeed = 28f;
 
         [Header("Anatomical Biomechanical Limits")]
-        [Tooltip("Flexion axis for Left hand fingers (local -X bends into palm in Avaturn humanoid rig).")]
-        [SerializeField] private Vector3 leftFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
-        [Tooltip("Flexion axis for Right hand fingers (local -X bends into palm in Avaturn humanoid rig).")]
-        [SerializeField] private Vector3 rightFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
+        [Tooltip("Flexion axis for Left hand fingers (local +X bends into palm in Avaturn humanoid rig).")]
+        [SerializeField] private Vector3 leftFingerFlexionAxis = new Vector3(1f, 0f, 0f);
+        [Tooltip("Flexion axis for Right hand fingers (local +X bends into palm in Avaturn humanoid rig).")]
+        [SerializeField] private Vector3 rightFingerFlexionAxis = new Vector3(1f, 0f, 0f);
 
         [Tooltip("Thumb abduction/flexion axis for Left hand.")]
         [SerializeField] private Vector3 leftThumbFlexionAxis = new Vector3(0.7f, -0.2f, 0.6f);
