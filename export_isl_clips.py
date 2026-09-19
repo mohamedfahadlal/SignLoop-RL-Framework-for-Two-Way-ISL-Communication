@@ -28,7 +28,7 @@ BASE_ANCHOR = np.array([0.0, 1.38, 0.35], dtype=np.float32)
 ARM_SCALE_X = 0.28      # meters per MediaPipe normalized unit in lateral width
 ARM_SCALE_Y = 0.34      # meters per MediaPipe normalized unit in vertical reach
 ARM_SCALE_Z = 0.16      # monocular Z damping to match avatar physical reach
-DEFAULT_DURATION = 2.5  # 2.5 seconds base duration for realistic, clear ISL signing
+DEFAULT_DURATION = 1.2  # 1.2 seconds base duration for realistic, clear ISL signing
 
 def fill_tracking_gaps(landmarks_seq):
     """
@@ -102,23 +102,29 @@ def get_finger_curls_robust(hand_landmarks):
             d_tip = np.linalg.norm(hand_landmarks[j_tip] - hand_landmarks[17]) # distance to pinky base (opposition)
             d_base = np.linalg.norm(hand_landmarks[5] - hand_landmarks[17])
             opp_ratio = d_tip / (d_base + 1e-4)
-            # Map to 0-60 deg
-            c = np.clip(total_ang * 0.8 + (1.2 - opp_ratio) * 30.0, 0.0, 60.0)
+            
+            # High-contrast thumb opposition
+            opp_score = np.clip((opp_ratio - 0.5) / (1.1 - 0.5), 0.0, 1.0)
+            opp_score = opp_score * opp_score * (3.0 - 2.0 * opp_score) # Smoothstep for punchier poses
+            
+            c = np.clip(total_ang * 0.4 + (1.0 - opp_score) * 65.0, 0.0, 65.0)
             curls.append(float(c))
         else:
             # 4 Fingers: MCP, PIP, DIP
             a1 = compute_segment_angle(wrist, hand_landmarks[j_mcp], hand_landmarks[j_pip])
             a2 = compute_segment_angle(hand_landmarks[j_mcp], hand_landmarks[j_pip], hand_landmarks[j_dip])
             a3 = compute_segment_angle(hand_landmarks[j_pip], hand_landmarks[j_dip], hand_landmarks[j_tip])
-            total_ang = a1 * 0.4 + a2 * 0.8 + a3 * 0.6
+            total_ang = a1 * 0.3 + a2 * 0.4 + a3 * 0.3
             
             d_mcp = np.linalg.norm(hand_landmarks[j_mcp] - wrist)
             d_tip = np.linalg.norm(hand_landmarks[j_tip] - wrist)
             ratio = d_tip / (d_mcp + 1e-4)
             
-            # Combine 3D joint angle with extension ratio
-            ext_score = np.clip((ratio - 0.9) / (1.85 - 0.9), 0.0, 1.0)
-            c = np.clip(total_ang * 0.6 + (1.0 - ext_score) * 45.0, 0.0, 82.0)
+            # High-contrast extension ratio for distinct fists vs open palms
+            ext_score = np.clip((ratio - 1.0) / (1.7 - 1.0), 0.0, 1.0)
+            ext_score = ext_score * ext_score * (3.0 - 2.0 * ext_score) # Smoothstep
+            
+            c = np.clip(total_ang * 0.3 + (1.0 - ext_score) * 85.0, 0.0, 85.0)
             curls.append(float(c))
             
     return curls, True
@@ -305,6 +311,37 @@ def export_clip_from_sample(sample, sign_name):
             "rightHandActive": r_active and rh_overall_active
         }
         frames_data.append(frame_entry)
+        
+    # --- TEMPORAL SMOOTHING PASS (Removes robotic jitter) ---
+    smoothed_frames = []
+    window = 3 # 3-frame moving average
+    for i in range(len(frames_data)):
+        start_idx = max(0, i - window // 2)
+        end_idx = min(len(frames_data), i + window // 2 + 1)
+        slice_frames = frames_data[start_idx:end_idx]
+        
+        sf = dict(frames_data[i]) # copy structure
+        
+        # Helper to average Vector3 dictionaries
+        def avg_vec3(key):
+            x = sum(f[key]["x"] for f in slice_frames) / len(slice_frames)
+            y = sum(f[key]["y"] for f in slice_frames) / len(slice_frames)
+            z = sum(f[key]["z"] for f in slice_frames) / len(slice_frames)
+            return {"x": x, "y": y, "z": z}
+            
+        sf["leftWristPos"] = avg_vec3("leftWristPos")
+        sf["leftElbowHint"] = avg_vec3("leftElbowHint")
+        sf["rightWristPos"] = avg_vec3("rightWristPos")
+        sf["rightElbowHint"] = avg_vec3("rightElbowHint")
+        
+        # Average curls
+        for curl_key in ["leftThumbCurl", "leftIndexCurl", "leftMiddleCurl", "leftRingCurl", "leftPinkyCurl",
+                         "rightThumbCurl", "rightIndexCurl", "rightMiddleCurl", "rightRingCurl", "rightPinkyCurl"]:
+            sf[curl_key] = sum(f[curl_key] for f in slice_frames) / len(slice_frames)
+            
+        smoothed_frames.append(sf)
+        
+    frames_data = smoothed_frames
 
     clip_dict = {
         "signName": sign_name,

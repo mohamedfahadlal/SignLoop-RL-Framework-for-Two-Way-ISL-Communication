@@ -474,6 +474,12 @@ namespace SignLoop.Rigging
                 // Filtered Sign Button Grid (2 columns)
                 List<string> filtered = GetFilteredSigns();
                 GUILayout.Space(4);
+
+                if (GUILayout.Button("🔄 Reload JSON Clips from Disk", GUILayout.Height(25)))
+                {
+                    if (signPlayer != null) signPlayer.LoadClipLibrary();
+                }
+                
                 GUILayout.Label($"<b>Select Sign ({filtered.Count}):</b>");
 
                 for (int i = 0; i < filtered.Count; i += 2)
