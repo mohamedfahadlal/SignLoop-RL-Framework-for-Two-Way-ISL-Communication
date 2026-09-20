@@ -19,7 +19,7 @@ namespace SignLoop.Rigging
 
         [Header("Procedural Solver Fallback")]
         [Tooltip("Enables built-in analytical Two-Bone IK in LateUpdate. Works without an AnimatorController.")]
-        [SerializeField] private bool useProceduralSolver = true;
+        public bool useProceduralSolver = true;
         [Range(0f, 1f)]
         [SerializeField] private float solverWeight = 1f;
         [Tooltip("If true, overrides wrist bone rotation with targetRot clamped to human limits. If false, wrist preserves natural forearm alignment.")]

@@ -565,6 +565,13 @@ namespace SignLoop.Rigging
                 }
                 GUILayout.EndHorizontal();
 
+                GUILayout.Space(5);
+                if (GUILayout.Button("🚀 1-Click Auto-Setup Final IK (VRIK)"))
+                {
+                    var wrapper = UnityEngine.Object.FindFirstObjectByType<AvatarRigWrapper>();
+                    if (wrapper != null) FinalIKBridge.SetupVRIK(wrapper);
+                }
+
                 if (GUILayout.Button("🔍 Run Curl Biomechanical Test"))
                 {
                     SignLoop.Diagnostics.HandCurlDiagnostic.RunCheck();
