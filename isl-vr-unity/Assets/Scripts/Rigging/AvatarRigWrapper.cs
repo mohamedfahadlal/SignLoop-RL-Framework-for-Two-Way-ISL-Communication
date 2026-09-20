@@ -200,6 +200,8 @@ namespace SignLoop.Rigging
 
             Debug.Log($"<color=green>[AvatarRigWrapper] Avatar '{avatarInstance.name}' bound successfully (Complete: {allBound}).</color>");
             return allBound;
+        }
+
         private void OnDrawGizmos()
         {
             if (armIK != null && armIK.LeftArmTarget != null)

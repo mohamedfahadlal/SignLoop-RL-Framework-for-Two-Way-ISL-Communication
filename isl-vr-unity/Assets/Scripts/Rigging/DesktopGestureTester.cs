@@ -518,19 +518,25 @@ namespace SignLoop.Rigging
                 GUILayout.EndHorizontal();
 
                 GUILayout.BeginHorizontal();
-                if (GUILayout.Button("Natural (+Z Palm)"))
+                if (GUILayout.Button("Z Axis (Avaturn)"))
                 {
                     handPose.LeftFingerFlexionAxis = new Vector3(0f, 0f, 1f);
                     handPose.RightFingerFlexionAxis = new Vector3(0f, 0f, 1f);
-                    handPose.LeftThumbFlexionAxis = new Vector3(0f, 0.7f, 0.7f);
-                    handPose.RightThumbFlexionAxis = new Vector3(0f, -0.7f, 0.7f);
                 }
-                if (GUILayout.Button("Inverted (-Z)"))
+                if (GUILayout.Button("-Z Axis"))
                 {
                     handPose.LeftFingerFlexionAxis = new Vector3(0f, 0f, -1f);
                     handPose.RightFingerFlexionAxis = new Vector3(0f, 0f, -1f);
-                    handPose.LeftThumbFlexionAxis = new Vector3(0f, -0.7f, -0.7f);
-                    handPose.RightThumbFlexionAxis = new Vector3(0f, 0.7f, -0.7f);
+                }
+                if (GUILayout.Button("X Axis (Mixamo)"))
+                {
+                    handPose.LeftFingerFlexionAxis = new Vector3(1f, 0f, 0f);
+                    handPose.RightFingerFlexionAxis = new Vector3(1f, 0f, 0f);
+                }
+                if (GUILayout.Button("-X Axis"))
+                {
+                    handPose.LeftFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
+                    handPose.RightFingerFlexionAxis = new Vector3(-1f, 0f, 0f);
                 }
                 if (GUILayout.Button("🧍 Force T-Pose", GUILayout.Width(110)))
                 {
