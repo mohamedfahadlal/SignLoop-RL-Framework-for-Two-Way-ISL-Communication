@@ -9,7 +9,7 @@ dataset/
 *.mp4
 *.npz
 
-models/
+models/ai4bharat/
 *.pth
 
 # Python cache
