@@ -58,6 +58,9 @@ namespace SignLoop.Rigging
                         
                         FieldInfo bendGoalField = armType.GetField("bendGoal");
                         if (bendGoalField != null) bendGoalField.SetValue(leftArm, armIK.LeftElbowHint);
+
+                        FieldInfo bendGoalWeightField = armType.GetField("bendGoalWeight");
+                        if (bendGoalWeightField != null) bendGoalWeightField.SetValue(leftArm, 1f);
                     }
 
                     // Assign Right Arm Target
@@ -71,6 +74,9 @@ namespace SignLoop.Rigging
                         
                         FieldInfo bendGoalField = armType.GetField("bendGoal");
                         if (bendGoalField != null) bendGoalField.SetValue(rightArm, armIK.RightElbowHint);
+
+                        FieldInfo bendGoalWeightField = armType.GetField("bendGoalWeight");
+                        if (bendGoalWeightField != null) bendGoalWeightField.SetValue(rightArm, 1f);
                     }
 
                     // Set weights
