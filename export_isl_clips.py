@@ -23,11 +23,12 @@ RES_DIR = ROOT / "isl-vr-unity" / "Assets" / "Resources" / "ISLClips"
 ANIM_DIR.mkdir(parents=True, exist_ok=True)
 RES_DIR.mkdir(parents=True, exist_ok=True)
 
-# Avatar calibration constants (Avatar height ~1.75m, shoulders ~1.38m, forward signing plane ~0.35m)
-BASE_ANCHOR = np.array([0.0, 1.38, 0.35], dtype=np.float32)
-ARM_SCALE_X = 1.25      # meters per MediaPipe normalized unit in lateral width (MediaPipe arm length is ~0.4)
-ARM_SCALE_Y = 1.25      # meters per MediaPipe normalized unit in vertical reach
-ARM_SCALE_Z = 1.00      # monocular Z depth multiplier
+# Avatar calibration constants (Avatar height ~1.75m, shoulders ~1.38m, Z=0)
+# BASE_ANCHOR is where the wrist goes if delta_w == 0 (wrist is at the shoulder)
+BASE_ANCHOR = np.array([0.0, 1.38, 0.15], dtype=np.float32)
+ARM_SCALE_X = 0.35      # 1 normalized unit = 1 shoulder width (approx 0.35 meters)
+ARM_SCALE_Y = 0.35      
+ARM_SCALE_Z = 0.35      
 DEFAULT_DURATION = 1.2  # 1.2 seconds base duration for realistic, clear ISL signing
 
 def fill_tracking_gaps(landmarks_seq):
@@ -237,8 +238,9 @@ def export_clip_from_sample(sample, sign_name):
                 -delta_e[1] * ARM_SCALE_Y,
                 -delta_e[2] * ARM_SCALE_Z
             ])
-            l_elbow_pos[0] = min(l_elbow_pos[0], -0.10)
-            l_elbow_pos[2] = min(l_elbow_pos[2], 0.10) # Allow elbows to come forward slightly
+            # Force elbow hint outwards and backwards to guarantee a clean bend plane for IK
+            l_elbow_pos[0] = min(l_elbow_pos[0] - 0.20, -0.30)
+            l_elbow_pos[2] = min(l_elbow_pos[2] - 0.20, -0.10)
         else:
             l_elbow_pos = default_l_elbow.copy()
 
@@ -275,8 +277,8 @@ def export_clip_from_sample(sample, sign_name):
                 -delta_e[1] * ARM_SCALE_Y,
                 -delta_e[2] * ARM_SCALE_Z
             ])
-            r_elbow_pos[0] = max(r_elbow_pos[0], 0.10)
-            r_elbow_pos[2] = min(r_elbow_pos[2], 0.10) # Allow elbows to come forward slightly
+            r_elbow_pos[0] = max(r_elbow_pos[0] + 0.20, 0.30)
+            r_elbow_pos[2] = min(r_elbow_pos[2] - 0.20, -0.10)
         else:
             r_elbow_pos = default_r_elbow.copy()
 

@@ -164,6 +164,8 @@ namespace SignLoop.Rigging
             var animator = currentAvatar.GetComponent<Animator>();
             if (animator == null) animator = currentAvatar.GetComponentInParent<Animator>();
             if (animator == null) animator = GetComponent<Animator>();
+            
+            _animator = animator;
 
             mapping.AutoPopulate(animator);
 
