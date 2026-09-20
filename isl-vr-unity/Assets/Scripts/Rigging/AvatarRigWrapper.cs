@@ -219,23 +219,58 @@ namespace SignLoop.Rigging
 
             if (!showRigLines || _animator == null) return;
             
+            // Draw Elbow Hint Directional Lines
+            if (armIK != null)
+            {
+                Gizmos.color = new Color(1f, 1f, 0f, 0.5f); // semi-transparent yellow
+                Transform lElbow = _animator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+                Transform rElbow = _animator.GetBoneTransform(HumanBodyBones.RightLowerArm);
+                if (lElbow != null && armIK.LeftElbowHint != null) Gizmos.DrawLine(lElbow.position, armIK.LeftElbowHint.position);
+                if (rElbow != null && armIK.RightElbowHint != null) Gizmos.DrawLine(rElbow.position, armIK.RightElbowHint.position);
+            }
+            
             Gizmos.color = Color.green;
             DrawBoneLine(HumanBodyBones.LeftShoulder, HumanBodyBones.LeftUpperArm);
-            DrawBoneLine(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm);
-            DrawBoneLine(HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand);
+            DrawBoneLine(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm); // Upper Arm
+            DrawBoneLine(HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand);     // Forearm
             
             DrawBoneLine(HumanBodyBones.RightShoulder, HumanBodyBones.RightUpperArm);
-            DrawBoneLine(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm);
-            DrawBoneLine(HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand);
+            DrawBoneLine(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm); // Upper Arm
+            DrawBoneLine(HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand);     // Forearm
 
             Gizmos.color = Color.cyan;
-            DrawBoneLine(HumanBodyBones.LeftHand, HumanBodyBones.LeftIndexProximal);
-            DrawBoneLine(HumanBodyBones.LeftIndexProximal, HumanBodyBones.LeftIndexIntermediate);
-            DrawBoneLine(HumanBodyBones.LeftIndexIntermediate, HumanBodyBones.LeftIndexDistal);
+            DrawFingerLines(true);
+            DrawFingerLines(false);
+        }
 
-            DrawBoneLine(HumanBodyBones.RightHand, HumanBodyBones.RightIndexProximal);
-            DrawBoneLine(HumanBodyBones.RightIndexProximal, HumanBodyBones.RightIndexIntermediate);
-            DrawBoneLine(HumanBodyBones.RightIndexIntermediate, HumanBodyBones.RightIndexDistal);
+        private void DrawFingerLines(bool isLeft)
+        {
+            HumanBodyBones hand = isLeft ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand;
+
+            // Thumb
+            DrawBoneLine(hand, isLeft ? HumanBodyBones.LeftThumbProximal : HumanBodyBones.RightThumbProximal);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftThumbProximal : HumanBodyBones.RightThumbProximal, isLeft ? HumanBodyBones.LeftThumbIntermediate : HumanBodyBones.RightThumbIntermediate);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftThumbIntermediate : HumanBodyBones.RightThumbIntermediate, isLeft ? HumanBodyBones.LeftThumbDistal : HumanBodyBones.RightThumbDistal);
+
+            // Index
+            DrawBoneLine(hand, isLeft ? HumanBodyBones.LeftIndexProximal : HumanBodyBones.RightIndexProximal);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftIndexProximal : HumanBodyBones.RightIndexProximal, isLeft ? HumanBodyBones.LeftIndexIntermediate : HumanBodyBones.RightIndexIntermediate);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftIndexIntermediate : HumanBodyBones.RightIndexIntermediate, isLeft ? HumanBodyBones.LeftIndexDistal : HumanBodyBones.RightIndexDistal);
+
+            // Middle
+            DrawBoneLine(hand, isLeft ? HumanBodyBones.LeftMiddleProximal : HumanBodyBones.RightMiddleProximal);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftMiddleProximal : HumanBodyBones.RightMiddleProximal, isLeft ? HumanBodyBones.LeftMiddleIntermediate : HumanBodyBones.RightMiddleIntermediate);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftMiddleIntermediate : HumanBodyBones.RightMiddleIntermediate, isLeft ? HumanBodyBones.LeftMiddleDistal : HumanBodyBones.RightMiddleDistal);
+
+            // Ring
+            DrawBoneLine(hand, isLeft ? HumanBodyBones.LeftRingProximal : HumanBodyBones.RightRingProximal);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftRingProximal : HumanBodyBones.RightRingProximal, isLeft ? HumanBodyBones.LeftRingIntermediate : HumanBodyBones.RightRingIntermediate);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftRingIntermediate : HumanBodyBones.RightRingIntermediate, isLeft ? HumanBodyBones.LeftRingDistal : HumanBodyBones.RightRingDistal);
+
+            // Pinky
+            DrawBoneLine(hand, isLeft ? HumanBodyBones.LeftLittleProximal : HumanBodyBones.RightLittleProximal);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftLittleProximal : HumanBodyBones.RightLittleProximal, isLeft ? HumanBodyBones.LeftLittleIntermediate : HumanBodyBones.RightLittleIntermediate);
+            DrawBoneLine(isLeft ? HumanBodyBones.LeftLittleIntermediate : HumanBodyBones.RightLittleIntermediate, isLeft ? HumanBodyBones.LeftLittleDistal : HumanBodyBones.RightLittleDistal);
         }
 
         private void DrawBoneLine(HumanBodyBones parent, HumanBodyBones child)
@@ -246,7 +281,7 @@ namespace SignLoop.Rigging
             if (p != null && c != null)
             {
                 Gizmos.DrawLine(p.position, c.position);
-                Gizmos.DrawWireSphere(p.position, 0.01f);
+                Gizmos.DrawWireSphere(p.position, 0.005f);
             }
         }
     }
