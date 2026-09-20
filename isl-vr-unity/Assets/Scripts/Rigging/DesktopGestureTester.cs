@@ -555,12 +555,12 @@ namespace SignLoop.Rigging
                 GUILayout.BeginHorizontal();
                 if (GUILayout.Button("👁️ Toggle Visible Rigging Lines"))
                 {
-                    var wrapper = Object.FindFirstObjectByType<AvatarRigWrapper>();
+                    var wrapper = UnityEngine.Object.FindFirstObjectByType<AvatarRigWrapper>();
                     if (wrapper != null) wrapper.showRigLines = !wrapper.showRigLines;
                 }
                 if (GUILayout.Button("✅ Run Comprehensive Rig Validator"))
                 {
-                    var anim = Object.FindFirstObjectByType<Animator>();
+                    var anim = UnityEngine.Object.FindFirstObjectByType<Animator>();
                     if (anim != null) SignLoop.Diagnostics.AvatarRigValidator.ValidateRig(anim);
                 }
                 GUILayout.EndHorizontal();
