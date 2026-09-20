@@ -18,6 +18,15 @@ namespace SignLoop.Rigging
         [SerializeField] private ISLSignPlayer signPlayer;
 
         [Header("Avatar Container & Instance")]
+        [Tooltip("If true, dynamically re-binds if a new avatar prefab is spawned at runtime.")]
+        [SerializeField] private bool autoBindOnStart = true;
+        
+        [Header("Diagnostics")]
+        public bool showRigLines = false;
+
+        private Animator _animator;
+        private bool _isBound = false;
+
         [Tooltip("Transform slot where the avatar mesh prefab is parented.")]
         [SerializeField] private Transform avatarSlot;
 
@@ -191,6 +200,50 @@ namespace SignLoop.Rigging
 
             Debug.Log($"<color=green>[AvatarRigWrapper] Avatar '{avatarInstance.name}' bound successfully (Complete: {allBound}).</color>");
             return allBound;
+        private void OnDrawGizmos()
+        {
+            if (armIK != null && armIK.LeftArmTarget != null)
+            {
+                Gizmos.color = Color.magenta;
+                Gizmos.DrawWireSphere(armIK.LeftArmTarget.position, 0.05f);
+                Gizmos.DrawWireSphere(armIK.RightArmTarget.position, 0.05f);
+                
+                Gizmos.color = Color.yellow;
+                if (armIK.LeftElbowHint != null) Gizmos.DrawWireSphere(armIK.LeftElbowHint.position, 0.04f);
+                if (armIK.RightElbowHint != null) Gizmos.DrawWireSphere(armIK.RightElbowHint.position, 0.04f);
+            }
+
+            if (!showRigLines || _animator == null) return;
+            
+            Gizmos.color = Color.green;
+            DrawBoneLine(HumanBodyBones.LeftShoulder, HumanBodyBones.LeftUpperArm);
+            DrawBoneLine(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm);
+            DrawBoneLine(HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand);
+            
+            DrawBoneLine(HumanBodyBones.RightShoulder, HumanBodyBones.RightUpperArm);
+            DrawBoneLine(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm);
+            DrawBoneLine(HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand);
+
+            Gizmos.color = Color.cyan;
+            DrawBoneLine(HumanBodyBones.LeftHand, HumanBodyBones.LeftIndexProximal);
+            DrawBoneLine(HumanBodyBones.LeftIndexProximal, HumanBodyBones.LeftIndexIntermediate);
+            DrawBoneLine(HumanBodyBones.LeftIndexIntermediate, HumanBodyBones.LeftIndexDistal);
+
+            DrawBoneLine(HumanBodyBones.RightHand, HumanBodyBones.RightIndexProximal);
+            DrawBoneLine(HumanBodyBones.RightIndexProximal, HumanBodyBones.RightIndexIntermediate);
+            DrawBoneLine(HumanBodyBones.RightIndexIntermediate, HumanBodyBones.RightIndexDistal);
+        }
+
+        private void DrawBoneLine(HumanBodyBones parent, HumanBodyBones child)
+        {
+            if (_animator == null) return;
+            Transform p = _animator.GetBoneTransform(parent);
+            Transform c = _animator.GetBoneTransform(child);
+            if (p != null && c != null)
+            {
+                Gizmos.DrawLine(p.position, c.position);
+                Gizmos.DrawWireSphere(p.position, 0.01f);
+            }
         }
     }
 }

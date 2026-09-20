@@ -532,17 +532,30 @@ namespace SignLoop.Rigging
                     handPose.LeftThumbFlexionAxis = new Vector3(0f, -0.7f, -0.7f);
                     handPose.RightThumbFlexionAxis = new Vector3(0f, 0.7f, -0.7f);
                 }
-                if (GUILayout.Button("🧍 Force T-Pose", GUILayout.Width(130)))
+                if (GUILayout.Button("🧍 Force T-Pose", GUILayout.Width(110)))
                 {
                     if (signPlayer != null) signPlayer.Stop();
                     if (armIK != null)
                     {
-                        // True T-Pose: Arms extended horizontally (X = +/- 0.7m, Y = Shoulder height 1.35m, Z = 0)
                         armIK.SetLeftArmTarget(new Vector3(-0.75f, 1.35f, 0f), Quaternion.Euler(0, 0, 90));
                         armIK.SetRightArmTarget(new Vector3(0.75f, 1.35f, 0f), Quaternion.Euler(0, 0, -90));
                         armIK.SetLeftElbowHint(new Vector3(-0.4f, 1.35f, -0.5f));
                         armIK.SetRightElbowHint(new Vector3(0.4f, 1.35f, -0.5f));
                     }
+                }
+                GUILayout.EndHorizontal();
+                
+                GUILayout.Space(5);
+                GUILayout.BeginHorizontal();
+                if (GUILayout.Button("👁️ Toggle Visible Rigging Lines"))
+                {
+                    var wrapper = Object.FindFirstObjectByType<AvatarRigWrapper>();
+                    if (wrapper != null) wrapper.showRigLines = !wrapper.showRigLines;
+                }
+                if (GUILayout.Button("✅ Run Comprehensive Rig Validator"))
+                {
+                    var anim = Object.FindFirstObjectByType<Animator>();
+                    if (anim != null) SignLoop.Diagnostics.AvatarRigValidator.ValidateRig(anim);
                 }
                 GUILayout.EndHorizontal();
 
