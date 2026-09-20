@@ -17,11 +17,12 @@ namespace SignLoop.Rigging
             var avatar = rigWrapper.CurrentAvatar;
             var armIK = rigWrapper.ArmIK;
 
-            // Use reflection to find VRIK Type
-            Type vrikType = Type.GetType("RootMotion.FinalIK.VRIK, Assembly-CSharp");
-            if (vrikType == null)
+            // Use reflection to find VRIK Type across all loaded assemblies
+            Type vrikType = null;
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
-                vrikType = Type.GetType("RootMotion.FinalIK.VRIK, RootMotion"); // in case it's in an asmdef
+                vrikType = assembly.GetType("RootMotion.FinalIK.VRIK");
+                if (vrikType != null) break;
             }
 
             if (vrikType == null)
