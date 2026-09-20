@@ -25,9 +25,9 @@ RES_DIR.mkdir(parents=True, exist_ok=True)
 
 # Avatar calibration constants (Avatar height ~1.75m, shoulders ~1.38m, forward signing plane ~0.35m)
 BASE_ANCHOR = np.array([0.0, 1.38, 0.35], dtype=np.float32)
-ARM_SCALE_X = 0.28      # meters per MediaPipe normalized unit in lateral width
-ARM_SCALE_Y = 0.34      # meters per MediaPipe normalized unit in vertical reach
-ARM_SCALE_Z = 0.16      # monocular Z damping to match avatar physical reach
+ARM_SCALE_X = 1.25      # meters per MediaPipe normalized unit in lateral width (MediaPipe arm length is ~0.4)
+ARM_SCALE_Y = 1.25      # meters per MediaPipe normalized unit in vertical reach
+ARM_SCALE_Z = 1.00      # monocular Z depth multiplier
 DEFAULT_DURATION = 1.2  # 1.2 seconds base duration for realistic, clear ISL signing
 
 def fill_tracking_gaps(landmarks_seq):
@@ -223,9 +223,10 @@ def export_clip_from_sample(sample, sign_name):
                 -delta_w[1] * ARM_SCALE_Y,
                 -delta_w[2] * ARM_SCALE_Z
             ])
-            l_wrist_pos[0] = np.clip(l_wrist_pos[0], -0.45, 0.12)
-            l_wrist_pos[1] = np.clip(l_wrist_pos[1], 1.02, 1.70)
-            l_wrist_pos[2] = np.clip(l_wrist_pos[2], 0.30, 0.55)
+            # Allow full human reach (approx 0.6m radius from shoulder)
+            l_wrist_pos[0] = np.clip(l_wrist_pos[0], -0.65, 0.30)
+            l_wrist_pos[1] = np.clip(l_wrist_pos[1], 0.60, 1.90)
+            l_wrist_pos[2] = np.clip(l_wrist_pos[2], 0.15, 0.70)
         else:
             l_wrist_pos = default_l_wrist.copy()
 
@@ -236,8 +237,8 @@ def export_clip_from_sample(sample, sign_name):
                 -delta_e[1] * ARM_SCALE_Y,
                 -delta_e[2] * ARM_SCALE_Z
             ])
-            l_elbow_pos[0] = min(l_elbow_pos[0], -0.20)
-            l_elbow_pos[2] = min(l_elbow_pos[2], -0.05)
+            l_elbow_pos[0] = min(l_elbow_pos[0], -0.10)
+            l_elbow_pos[2] = min(l_elbow_pos[2], 0.10) # Allow elbows to come forward slightly
         else:
             l_elbow_pos = default_l_elbow.copy()
 
@@ -261,9 +262,9 @@ def export_clip_from_sample(sample, sign_name):
                 -delta_w[1] * ARM_SCALE_Y,
                 -delta_w[2] * ARM_SCALE_Z
             ])
-            r_wrist_pos[0] = np.clip(r_wrist_pos[0], -0.12, 0.45)
-            r_wrist_pos[1] = np.clip(r_wrist_pos[1], 1.02, 1.70)
-            r_wrist_pos[2] = np.clip(r_wrist_pos[2], 0.30, 0.55)
+            r_wrist_pos[0] = np.clip(r_wrist_pos[0], -0.30, 0.65)
+            r_wrist_pos[1] = np.clip(r_wrist_pos[1], 0.60, 1.90)
+            r_wrist_pos[2] = np.clip(r_wrist_pos[2], 0.15, 0.70)
         else:
             r_wrist_pos = default_r_wrist.copy()
 
@@ -274,8 +275,8 @@ def export_clip_from_sample(sample, sign_name):
                 -delta_e[1] * ARM_SCALE_Y,
                 -delta_e[2] * ARM_SCALE_Z
             ])
-            r_elbow_pos[0] = max(r_elbow_pos[0], 0.20)
-            r_elbow_pos[2] = min(r_elbow_pos[2], -0.05)
+            r_elbow_pos[0] = max(r_elbow_pos[0], 0.10)
+            r_elbow_pos[2] = min(r_elbow_pos[2], 0.10) # Allow elbows to come forward slightly
         else:
             r_elbow_pos = default_r_elbow.copy()
 
