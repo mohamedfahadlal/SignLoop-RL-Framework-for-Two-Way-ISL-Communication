@@ -61,6 +61,8 @@ namespace SignLoop.Rigging
 
                         FieldInfo bendGoalWeightField = armType.GetField("bendGoalWeight");
                         if (bendGoalWeightField != null) bendGoalWeightField.SetValue(leftArm, 1f);
+                        FieldInfo rotationWeightField = armType.GetField("rotationWeight");
+                        if (rotationWeightField != null) rotationWeightField.SetValue(leftArm, 0f); // Stop noisy 360 wrist twisting
                     }
 
                     // Assign Right Arm Target
@@ -77,6 +79,31 @@ namespace SignLoop.Rigging
 
                         FieldInfo bendGoalWeightField = armType.GetField("bendGoalWeight");
                         if (bendGoalWeightField != null) bendGoalWeightField.SetValue(rightArm, 1f);
+
+                        FieldInfo rotationWeightField = armType.GetField("rotationWeight");
+                        if (rotationWeightField != null) rotationWeightField.SetValue(rightArm, 0f); // Stop noisy 360 wrist twisting
+                    }
+
+                    // Pre-bend the elbows towards the hint spheres in World Space before initialization
+                    // to completely prevent the VRIK "singular bend direction" error.
+                    Animator anim = avatar.GetComponent<Animator>();
+                    if (anim != null)
+                    {
+                        Transform lUpper = anim.GetBoneTransform(HumanBodyBones.LeftUpperArm);
+                        Transform lLower = anim.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+                        if (lUpper != null && lLower != null && armIK.LeftElbowHint != null)
+                        {
+                            Vector3 toHint = armIK.LeftElbowHint.position - lUpper.position;
+                            lUpper.rotation = Quaternion.Slerp(lUpper.rotation, Quaternion.LookRotation(toHint), 0.1f);
+                        }
+
+                        Transform rUpper = anim.GetBoneTransform(HumanBodyBones.RightUpperArm);
+                        Transform rLower = anim.GetBoneTransform(HumanBodyBones.RightLowerArm);
+                        if (rUpper != null && rLower != null && armIK.RightElbowHint != null)
+                        {
+                            Vector3 toHint = armIK.RightElbowHint.position - rUpper.position;
+                            rUpper.rotation = Quaternion.Slerp(rUpper.rotation, Quaternion.LookRotation(toHint), 0.1f);
+                        }
                     }
 
                     // Set weights
