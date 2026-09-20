@@ -227,7 +227,17 @@ namespace SignLoop.Rigging
 
         private void LateUpdate()
         {
-            if (!useProceduralSolver || solverWeight <= 0f) return;
+            if (!useProceduralSolver || solverWeight <= 0f)
+            {
+                // Enable Unity constraints
+                if (leftArmConstraint != null) leftArmConstraint.weight = 1f;
+                if (rightArmConstraint != null) rightArmConstraint.weight = 1f;
+                return;
+            }
+
+            // Disable Unity constraints so our custom solver has full control
+            if (leftArmConstraint != null) leftArmConstraint.weight = 0f;
+            if (rightArmConstraint != null) rightArmConstraint.weight = 0f;
 
             EnsureTargets();
             if (!_bindPoseCaptured) CaptureBindPose();

@@ -27,8 +27,8 @@ RES_DIR.mkdir(parents=True, exist_ok=True)
 # BASE_ANCHOR is where the wrist goes if delta_w == 0 (wrist is at the shoulder)
 BASE_ANCHOR = np.array([0.0, 1.38, 0.15], dtype=np.float32)
 ARM_SCALE_X = 0.35      # 1 normalized unit = 1 shoulder width (approx 0.35 meters)
-ARM_SCALE_Y = 0.35      
-ARM_SCALE_Z = 0.35      
+ARM_SCALE_Y = 0.20      # Compensate for 16:9 aspect ratio distortion (1080/1920 * 0.35 = 0.196)
+ARM_SCALE_Z = 0.20      # Reduce noisy monocular depth jitter
 DEFAULT_DURATION = 1.2  # 1.2 seconds base duration for realistic, clear ISL signing
 
 def fill_tracking_gaps(landmarks_seq):
@@ -224,10 +224,10 @@ def export_clip_from_sample(sample, sign_name):
                 -delta_w[1] * ARM_SCALE_Y,
                 -delta_w[2] * ARM_SCALE_Z
             ])
-            # Allow full human reach (approx 0.6m radius from shoulder)
-            l_wrist_pos[0] = np.clip(l_wrist_pos[0], -0.65, 0.30)
+            # Anatomical limit: An arm is ~0.53m long. Clamping Z to 0.40m guarantees it can NEVER lock straight.
+            l_wrist_pos[0] = np.clip(l_wrist_pos[0], -0.60, 0.0)
             l_wrist_pos[1] = np.clip(l_wrist_pos[1], 0.60, 1.90)
-            l_wrist_pos[2] = np.clip(l_wrist_pos[2], 0.15, 0.70)
+            l_wrist_pos[2] = np.clip(l_wrist_pos[2], 0.10, 0.40)
         else:
             l_wrist_pos = default_l_wrist.copy()
 
@@ -264,9 +264,10 @@ def export_clip_from_sample(sample, sign_name):
                 -delta_w[1] * ARM_SCALE_Y,
                 -delta_w[2] * ARM_SCALE_Z
             ])
-            r_wrist_pos[0] = np.clip(r_wrist_pos[0], -0.30, 0.65)
+            # Anatomical limit: An arm is ~0.53m long. Clamping Z to 0.40m guarantees it can NEVER lock straight.
+            r_wrist_pos[0] = np.clip(r_wrist_pos[0], 0.0, 0.60)
             r_wrist_pos[1] = np.clip(r_wrist_pos[1], 0.60, 1.90)
-            r_wrist_pos[2] = np.clip(r_wrist_pos[2], 0.15, 0.70)
+            r_wrist_pos[2] = np.clip(r_wrist_pos[2], 0.10, 0.40)
         else:
             r_wrist_pos = default_r_wrist.copy()
 
