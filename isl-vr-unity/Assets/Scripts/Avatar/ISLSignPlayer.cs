@@ -87,8 +87,13 @@ namespace SignLoop.Avatar
         [Tooltip("Duration to smoothly blend arms and fingers back to neutral rest stance.")]
         [SerializeField] private float leadOutDuration = 0.5f;
         [SerializeField] private bool loop = false;
+        [SerializeField] private bool playOnAwake = false;
 
-        [Header("Wrist Alignment")]
+        [Header("Precision & Smoothing")]
+        [Tooltip("If true, mathematically snaps noisy raw finger curls into pristine predefined ISL handshapes.")]
+        public bool enableCanonicalSnapping = true;
+
+        [Header("Sign Clip Data")]
         [Tooltip("If true, overrides wrist orientation with clip video rotation. If false, wrists align naturally with forearm IK for 100% stable, human-safe motion.")]
         [SerializeField] private bool matchWristRotation = false;
 
@@ -480,9 +485,21 @@ namespace SignLoop.Avatar
             armIK.SetLeftElbowHint(rawLElbow);
             armIK.SetRightElbowHint(rawRElbow);
 
-            // Apply to HandPoseController
-            handPose.SetFingerCurls(HandSide.Left, lThumb, lIndex, lMiddle, lRing, lPinky);
-            handPose.SetFingerCurls(HandSide.Right, rThumb, rIndex, rMiddle, rRing, rPinky);
+            if (enableCanonicalSnapping)
+            {
+                CanonicalHandShape lShape = ClassifyHandShape(lThumb, lIndex, lMiddle, lRing, lPinky);
+                if (lShape != CanonicalHandShape.Neutral) handPose.SetCanonicalShape(HandSide.Left, lShape);
+                else handPose.SetFingerCurls(HandSide.Left, lThumb, lIndex, lMiddle, lRing, lPinky);
+
+                CanonicalHandShape rShape = ClassifyHandShape(rThumb, rIndex, rMiddle, rRing, rPinky);
+                if (rShape != CanonicalHandShape.Neutral) handPose.SetCanonicalShape(HandSide.Right, rShape);
+                else handPose.SetFingerCurls(HandSide.Right, rThumb, rIndex, rMiddle, rRing, rPinky);
+            }
+            else
+            {
+                handPose.SetFingerCurls(HandSide.Left, lThumb, lIndex, lMiddle, lRing, lPinky);
+                handPose.SetFingerCurls(HandSide.Right, rThumb, rIndex, rMiddle, rRing, rPinky);
+            }
 
             _curRThumb = rThumb;
             _curRIndex = rIndex;
@@ -495,6 +512,34 @@ namespace SignLoop.Avatar
             _curLMiddle = lMiddle;
             _curLRing = lRing;
             _curLPinky = lPinky;
+        }
+
+        private CanonicalHandShape ClassifyHandShape(float t, float i, float m, float r, float p)
+        {
+            // Curl threshold (using 40 degrees as the midpoint for an 85 degree max curl)
+            bool tOut = t < 40f;
+            bool iOut = i < 40f;
+            bool mOut = m < 40f;
+            bool rOut = r < 40f;
+            bool pOut = p < 40f;
+
+            if (tOut && iOut && mOut && rOut && pOut) return CanonicalHandShape.OpenPalm;
+            if (!tOut && !iOut && !mOut && !rOut && !pOut) return CanonicalHandShape.Fist;
+
+            if (tOut && !iOut && !mOut && !rOut && !pOut) return CanonicalHandShape.ThumbUp;
+            if (!tOut && iOut && !mOut && !rOut && !pOut) return CanonicalHandShape.PointIndex;
+            if (tOut && iOut && !mOut && !rOut && !pOut) return CanonicalHandShape.PointIndex; // L shape
+            if (!tOut && iOut && mOut && !rOut && !pOut) return CanonicalHandShape.Victory;
+            
+            // "O" hand if thumb and index are curled exactly same amount (highly curled)
+            if (t > 50f && i > 50f && !mOut && !rOut && !pOut) return CanonicalHandShape.OHand;
+            
+            // "C" hand if all are partially curled (20-60 deg)
+            bool isC = (t > 20f && t < 60f) && (i > 20f && i < 60f) && (m > 20f && m < 60f);
+            if (isC) return CanonicalHandShape.CHand;
+
+            // If it doesn't match a perfect canonical shape, fall back to smooth raw curls
+            return CanonicalHandShape.Neutral;
         }
     }
 }
