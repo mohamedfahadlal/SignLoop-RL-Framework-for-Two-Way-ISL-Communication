@@ -59,4 +59,7 @@ crashlytics-build.properties
 # OS generated files
 .DS_Store
 Thumbs.db
-desktop.ini
+desktop.iniisl-vr-unity/[Ll]ibrary/
+isl-vr-unity/[Tt]emp/
+isl-vr-unity/[Oo]bj/
+isl-vr-unity/[Ll]ogs/

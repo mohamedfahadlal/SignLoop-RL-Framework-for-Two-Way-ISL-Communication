@@ -343,3 +343,28 @@ This document records the chronological history of work completed across session
 * **Dataset Verification:** Confirmed that asymmetric gestures (like one-handed 'House' signs) are accurate 1:1 reflections of the original video dataset, where the signer rested their non-dominant hand. Preparing user to migrate to Final IK (VRIK) to solve rigid clavicle syndrome.
 * **Final IK Automation:** Wrote a highly robust C# Reflection bridge (\FinalIKBridge.cs\) that dynamically hunts for Final IK in the Unity project without causing hard compiler dependencies. Added a 1-Click setup button in the GUI to instantly migrate the user's avatar from our custom procedural solver to professional VRIK with perfect target rebinding.
 * **VRIK Final Polish:** Disabled MediaPipe rotation targeting in VRIK to eliminate noisy 360-degree wrist twisting. Added a pre-initialization World Space elbow bend step to permanently bypass VRIK's straight-arm singularity error.
+
+## Session 9: Architecture & RL Math Cleanup (2026-09-21)
+
+### 1. Codebase Architecture
+* **Removed Redundant Model:** Deleted `models/model.py` to eliminate DRY violations. The RL pipeline strictly relies on `models/policy.py` as the canonical BiGRU + Temporal Attention architecture.
+* **Updated Init:** Corrected `models/__init_.py` to `models/__init__.py`.
+
+### 2. RL Reward Logic Formulation
+* **Structured Reward Function:** Updated `isl_env.py` to introduce a well-defined composite reward function for the RL fine-tuning stage. Replaced the generic placeholder with:
+  - `R_accuracy`: +1.0 for correct action matching the target label, -0.1 otherwise.
+  - `R_bilateral_sync`: Base stub added for spatiotemporal hand symmetry scoring.
+  - `L_penalty`: Base stub added for latency/erratic tracking penalties.
+* Verified PyTorch module imports successfully after cleanup.
+
+
+### 3. Unity Performance Optimization
+* **Zero GC Hot-Loop Guard:** Removed a dangerous `FindDependencies()` call from `ISLSignPlayer.LateUpdate()`. Previously, if the script lost reference to the avatar rigs mid-playback, it would trigger a cascading `FindFirstObjectByType` per frame, causing massive GC spikes. Now, it gracefully halts playback on reference drop, strictly preserving the 0-GC architecture.
+
+
+### 4. AI Tooling & Editor Integration
+* **Antigravity IDE Bridge:** Added `com.unity.ide.antigravity` to the Unity package manifest to enable seamless integration (IntelliSense, CSPROJ generation) with the Antigravity IDE.
+* **Unity MCP Plugin:** Successfully executed `unity-mcp-cli install-plugin` to bridge the Unity Editor context (GameObjects, Scenes, Builds) with AI agents.
+* **Agent Registration:** Executed `setup-mcp antigravity` to register the local HTTP transport for the Antigravity agent in `mcp_config.json`.
+
+* **Non-Destructive VRIK Uninstaller:** Added a '1-Click Revert to Custom IK' button to the Gesture Tester GUI. This feature completely uninstalls the VRIK component from the Avatar at runtime and seamlessly flips the active IK solver back to our custom procedural math, guaranteeing zero data loss if the user prefers the old behavior.

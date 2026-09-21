@@ -339,8 +339,14 @@ namespace SignLoop.Avatar
         {
             if (!_isPlaying || _isPaused || _currentClip == null || _currentClip.frames.Length == 0) return;
 
-            FindDependencies();
-            if (armIK == null || handPose == null) return;
+            // Strict zero-allocation guard: Do not use FindDependencies() here.
+            // If references drop (e.g., avatar despawned), stop gracefully without GC spiking.
+            if (armIK == null || handPose == null)
+            {
+                Debug.LogWarning("[ISLSignPlayer] Rig dependencies lost during playback. Stopping clip.");
+                Stop();
+                return;
+            }
 
             // Advance playhead
             _playheadTime += Time.deltaTime * playbackSpeed;

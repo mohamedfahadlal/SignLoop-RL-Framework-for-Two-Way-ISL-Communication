@@ -60,14 +60,22 @@ class ISLEnv(gym.Env):
         """
         correct_label = self.y[self.current_sample_idx]
         
-        # --- PLACEHOLDER REWARD LOGIC ---
-        # Members 2 & 3 will replace this block with the real R_accuracy, 
-        # R_bilateral_sync, and L_penalty math later.
-        if action == correct_label:
-            reward = 1.0  # Guessed correctly!
-        else:
-            reward = 0.0  # Guessed wrong.
-        # --------------------------------
+        # --- REWARD LOGIC ---
+        # 1. Base Accuracy Reward (R_accuracy)
+        r_accuracy = 1.0 if action == correct_label else -0.1
+
+        # 2. Bilateral Synchronization (R_bilateral_sync)
+        # Evaluates the spatiotemporal symmetry/sync of the hands in the input state window.
+        # (Placeholder heuristic: Members 2 & 3 to inject explicit velocity/phase sync math here)
+        r_bilateral_sync = 0.0 
+
+        # 3. Latency / Confidence Penalty (L_penalty)
+        # Penalizes hesitations or erratic spatial tracking in the state window.
+        l_penalty = 0.0
+
+        # Total Reward Composition
+        reward = r_accuracy + r_bilateral_sync - l_penalty
+        # --------------------
             
         # Since this is offline classification-style RL, the episode 
         # terminates immediately after the agent makes its translation guess.
