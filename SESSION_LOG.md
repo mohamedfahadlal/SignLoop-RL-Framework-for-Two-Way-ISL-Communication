@@ -368,3 +368,4 @@ This document records the chronological history of work completed across session
 * **Agent Registration:** Executed `setup-mcp antigravity` to register the local HTTP transport for the Antigravity agent in `mcp_config.json`.
 
 * **Non-Destructive VRIK Uninstaller:** Added a '1-Click Revert to Custom IK' button to the Gesture Tester GUI. This feature completely uninstalls the VRIK component from the Avatar at runtime and seamlessly flips the active IK solver back to our custom procedural math, guaranteeing zero data loss if the user prefers the old behavior.
+* **Git Ignore Fix:** Untracked Unity's nested \Library\ and \Temp\ folders from Git which were causing commit lockfile crashes.
