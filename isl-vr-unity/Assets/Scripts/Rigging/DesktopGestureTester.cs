@@ -572,6 +572,12 @@ namespace SignLoop.Rigging
                     if (wrapper != null) FinalIKBridge.SetupVRIK(wrapper);
                 }
 
+                if (GUILayout.Button("↩️ 1-Click Revert to Custom IK"))
+                {
+                    var wrapper = UnityEngine.Object.FindFirstObjectByType<AvatarRigWrapper>();
+                    if (wrapper != null) FinalIKBridge.RemoveVRIK(wrapper);
+                }
+
                 if (GUILayout.Button("🔍 Run Curl Biomechanical Test"))
                 {
                     SignLoop.Diagnostics.HandCurlDiagnostic.RunCheck();

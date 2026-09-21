@@ -1,0 +1,2 @@
+D:\Github\SignLoop-RL-Framework-for-Two-Way-ISL-Communication\isl-vr-unity\obj\Debug\Unity.TestTools.CodeCoverage.Editor.csproj.AssemblyReference.cache
+D:\Github\SignLoop-RL-Framework-for-Two-Way-ISL-Communication\isl-vr-unity\obj\Debug\Unity.TestTools.CodeCoverage.Editor.csproj.CoreCompileInputs.cache

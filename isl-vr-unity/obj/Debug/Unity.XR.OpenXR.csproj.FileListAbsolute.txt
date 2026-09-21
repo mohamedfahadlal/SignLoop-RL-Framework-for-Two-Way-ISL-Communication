@@ -1,0 +1,2 @@
+D:\Github\SignLoop-RL-Framework-for-Two-Way-ISL-Communication\isl-vr-unity\obj\Debug\Unity.XR.OpenXR.csproj.AssemblyReference.cache
+D:\Github\SignLoop-RL-Framework-for-Two-Way-ISL-Communication\isl-vr-unity\obj\Debug\Unity.XR.OpenXR.csproj.CoreCompileInputs.cache

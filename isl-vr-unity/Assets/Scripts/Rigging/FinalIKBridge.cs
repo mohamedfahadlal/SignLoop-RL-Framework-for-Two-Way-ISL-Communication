@@ -118,5 +118,26 @@ namespace SignLoop.Rigging
             // Log success
             Debug.Log("<color=green>[FinalIKBridge] Final IK successfully bound to targets! Procedural solver disabled.</color>");
         }
+
+        public static void RemoveVRIK(AvatarRigWrapper rigWrapper)
+        {
+            if (rigWrapper == null || rigWrapper.ArmIK == null || rigWrapper.CurrentAvatar == null) return;
+
+            var avatar = rigWrapper.CurrentAvatar;
+            
+            // Find any component named VRIK and destroy it
+            var allComponents = avatar.GetComponents<Component>();
+            foreach (var comp in allComponents)
+            {
+                if (comp != null && comp.GetType().Name == "VRIK")
+                {
+                    DestroyImmediate(comp);
+                }
+            }
+
+            // Re-enable our procedural solver
+            rigWrapper.ArmIK.useProceduralSolver = true;
+            Debug.Log("<color=yellow>[FinalIKBridge] VRIK completely removed. Custom Procedural Solver has been restored!</color>");
+        }
     }
 }
