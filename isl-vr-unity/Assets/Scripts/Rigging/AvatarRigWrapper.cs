@@ -22,6 +22,7 @@ namespace SignLoop.Rigging
         [SerializeField] private bool autoBindOnStart = true;
         
         [Header("Diagnostics")]
+        public bool showIKSpheres = true;
         public bool showRigLines = false;
 
         private Animator _animator;
@@ -206,7 +207,7 @@ namespace SignLoop.Rigging
 
         private void OnDrawGizmos()
         {
-            if (armIK != null && armIK.LeftArmTarget != null)
+            if (showIKSpheres && armIK != null && armIK.LeftArmTarget != null)
             {
                 Gizmos.color = Color.magenta;
                 Gizmos.DrawWireSphere(armIK.LeftArmTarget.position, 0.05f);
