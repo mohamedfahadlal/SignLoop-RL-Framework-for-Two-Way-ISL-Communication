@@ -107,6 +107,31 @@ namespace SignLoop.Avatar
         private bool _isPlaying = false;
         private bool _isPaused = false;
 
+        private System.Collections.Generic.Queue<string> _sentenceQueue = new System.Collections.Generic.Queue<string>();
+
+        public void PlaySentence(string sentence) {
+            if (string.IsNullOrWhiteSpace(sentence)) return;
+            string[] words = sentence.Trim().Split(new char[] { ' ', '.', ',', '?', '!' }, System.StringSplitOptions.RemoveEmptyEntries);
+            foreach (string w in words) {
+                _sentenceQueue.Enqueue(w);
+            }
+            if (!_isPlaying) {
+                PlayNextInQueue();
+            }
+        }
+
+        private void PlayNextInQueue() {
+            if (_sentenceQueue.Count > 0) {
+                string next = _sentenceQueue.Dequeue();
+                if (!PlaySign(next)) {
+                    // If word not found, immediately skip to next word
+                    PlayNextInQueue();
+                }
+            } else {
+                Stop();
+            }
+        }
+
         // Blending from previous state
         private Vector3 _blendStartLWrist, _blendStartRWrist;
         private Vector3 _blendStartLElbow, _blendStartRElbow;
@@ -367,7 +392,11 @@ namespace SignLoop.Avatar
                 }
                 else
                 {
-                    Stop();
+                    if (_sentenceQueue != null && _sentenceQueue.Count > 0) {
+                        PlayNextInQueue();
+                    } else {
+                        Stop();
+                    }
                     return;
                 }
             }

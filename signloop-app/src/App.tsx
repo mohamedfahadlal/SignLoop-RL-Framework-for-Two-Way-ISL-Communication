@@ -36,12 +36,47 @@ const drawLandmarks =
   (mpDrawing as any).default?.drawLandmarks || 
   (window as any).drawLandmarks;
 
+import { Unity, useUnityContext } from "react-unity-webgl";
+
 import "./App.css";
 function App() {
   const [activeChannel, setActiveChannel] = useState<'channel1' | 'channel2'>('channel1');
   const [translation, setTranslation] = useState<string>("Waiting for signs...");
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Setup Unity WebGL Context
+  const { unityProvider, sendMessage } = useUnityContext({
+    loaderUrl: "/Build/public.loader.js",
+    dataUrl: "/Build/public.data.gz",
+    frameworkUrl: "/Build/public.framework.js.gz",
+    codeUrl: "/Build/public.wasm.gz",
+  });
+
+  // Keep a live reference to sendMessage so the microphone callback always has the latest bridge!
+  const sendMessageRef = useRef(sendMessage);
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  }, [sendMessage]);
+
+  // Forcefully stop Unity from stealing global keystrokes!
+  useEffect(() => {
+    const stopUnityKeyboard = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT') {
+        e.stopImmediatePropagation();
+      }
+    };
+    // Capture phase (true) ensures this runs BEFORE Unity's Emscripten listeners!
+    window.addEventListener('keydown', stopUnityKeyboard, true);
+    window.addEventListener('keyup', stopUnityKeyboard, true);
+    window.addEventListener('keypress', stopUnityKeyboard, true);
+    
+    return () => {
+      window.removeEventListener('keydown', stopUnityKeyboard, true);
+      window.removeEventListener('keyup', stopUnityKeyboard, true);
+      window.removeEventListener('keypress', stopUnityKeyboard, true);
+    };
+  }, []);
 
   // The rolling 30-frame coordinate buffer (State Space S_t)
   const stateBufferRef = useRef<number[][]>([]);
@@ -153,6 +188,114 @@ function App() {
     };
   }, [activeChannel]);
 
+  const [textInput, setTextInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<any>(null);
+  const intentionallyListeningRef = useRef<boolean>(false);
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition && !recognitionRef.current) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        let fullTranscript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          fullTranscript += event.results[i][0].transcript;
+        }
+        setTextInput(fullTranscript);
+
+        // Reset the voice-activation timer on every new syllable
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        
+        silenceTimerRef.current = setTimeout(() => {
+          if (fullTranscript.trim()) {
+            const formattedSpeech = fullTranscript.trim()
+              .split(' ')
+              .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+              .join(' ');
+
+            console.log("Voice-Activation Triggered:", formattedSpeech);
+            sendMessageRef.current("ISL_AvatarRig", "PlaySentence", formattedSpeech);
+            setTextInput(""); // Clear the visual box
+            
+            // Briefly reboot the mic to clear Chrome's internal memory buffer
+            // so the next sentence starts fresh!
+            recognition.stop();
+          }
+        }, 1500); // Wait 1.5 seconds after they stop talking
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        if (event.error !== 'aborted') {
+          intentionallyListeningRef.current = false;
+          setIsListening(false);
+        }
+      };
+
+      recognition.onend = () => {
+        // If we still want to be listening (e.g. we just rebooted it), turn it back on!
+        if (intentionallyListeningRef.current) {
+          try {
+            recognition.start();
+          } catch (e) { }
+        } else {
+          setIsListening(false);
+        }
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const handleSendToUnity = async () => {
+    if (!textInput.trim()) return;
+    
+    // Stop listening when sending manually
+    if (isListening && recognitionRef.current) {
+      intentionallyListeningRef.current = false;
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+
+    // Unity's dictionary expects exact Title Case (e.g. "Job", not "job")
+    const formattedSentence = textInput
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+
+    console.log("Sent to Unity WebGL:", formattedSentence);
+    sendMessage("ISL_AvatarRig", "PlaySentence", formattedSentence);
+    setTextInput(""); 
+  };
+
+  const handleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      alert("Your browser does not support Web Speech API. Please use Chrome or Edge.");
+      return;
+    }
+
+    if (isListening) {
+      intentionallyListeningRef.current = false;
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setTextInput(""); // Clear before speaking
+      intentionallyListeningRef.current = true;
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.warn("Speech recognition is already running in the background.");
+      }
+      setIsListening(true);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <nav className="sidebar">
@@ -187,14 +330,42 @@ function App() {
             </div>
           </div>
         ) : (
-          <div className="channel-view">
+          <div className="channel-view" style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
             <h3>Channel 2: Rendering Layer</h3>
-            <div className="input-console">
-              <input type="text" placeholder="Type or speak a message..." />
-              <button>Send to Avatar</button>
+            <div className="input-console" style={{ marginBottom: '10px', display: 'flex', gap: '10px' }}>
+              <input 
+                type="text" 
+                placeholder="Type a sentence (e.g. 'Hello how are you')..." 
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation(); // Stops Unity from stealing your keystrokes!
+                  e.nativeEvent.stopImmediatePropagation();
+                  if (e.key === 'Enter') handleSendToUnity();
+                }}
+                onKeyUp={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
+                onKeyPress={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
+                style={{ flexGrow: 1 }}
+              />
+              <button onClick={handleSendToUnity}>Send to VR Avatar</button>
+              <button 
+                onClick={handleVoiceInput}
+                style={{ 
+                  backgroundColor: isListening ? '#ff4444' : '#4444ff',
+                  transition: 'background-color 0.3s' 
+                }}
+              >
+                {isListening ? "🎙️ Listening..." : "🎙️ Speak"}
+              </button>
             </div>
-            <div className="avatar-placeholder">
-              <p>3D Avatar Animation Will Render Here</p>
+            <div className="avatar-placeholder" style={{ flexGrow: 1, width: "100%", minHeight: "400px" }}>
+              <Unity unityProvider={unityProvider} style={{ width: "100%", height: "100%", borderRadius: "10px", display: "block" }} />
             </div>
           </div>
         )}
