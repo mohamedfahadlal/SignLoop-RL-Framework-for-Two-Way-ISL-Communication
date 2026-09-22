@@ -103,19 +103,20 @@ namespace SignLoop.Rigging
                 QualitySettings.antiAliasing = 8;
                 QualitySettings.anisotropicFiltering = AnisotropicFiltering.ForceEnable;
 
-                Vector3 target = transform.position + orbitTargetOffset;
-                Vector3 toCam = targetCamera.transform.position - target;
-                if (toCam.sqrMagnitude > 0.01f)
+                if (Application.isPlaying)
                 {
-                    _distance = Mathf.Clamp(toCam.magnitude, minDistance, maxDistance);
-                    _pitch = targetCamera.transform.eulerAngles.x;
-                    _yaw = targetCamera.transform.eulerAngles.y;
-                }
-                else
-                {
-                    _distance = 1.6f;
-                    _yaw = 0f;
-                    _pitch = 10f;
+                    if (targetCamera != null)
+                    {
+                        // Force the camera to face the FRONT of the avatar (180 degrees yaw)
+                        _distance = 1.6f;
+                        _yaw = 180f;
+                        _pitch = 10f;
+                        
+                        Vector3 target = transform.position + orbitTargetOffset;
+                        Quaternion rot = Quaternion.Euler(_pitch, _yaw, 0f);
+                        targetCamera.transform.position = target - (rot * Vector3.forward * _distance);
+                        targetCamera.transform.rotation = rot;
+                    }
                 }
             }
         }
