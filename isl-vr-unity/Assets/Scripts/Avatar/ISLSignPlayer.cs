@@ -107,6 +107,33 @@ namespace SignLoop.Avatar
         private bool _isPlaying = false;
         private bool _isPaused = false;
 
+        private System.Collections.Generic.Queue<string> _sentenceQueue = new System.Collections.Generic.Queue<string>();
+
+        public void PlaySentence(string sentence) {
+            if (string.IsNullOrWhiteSpace(sentence)) return;
+            string[] words = sentence.Trim().Split(new char[] { ' ', '.', ',', '?', '!' }, System.StringSplitOptions.RemoveEmptyEntries);
+            foreach (string w in words) {
+                _sentenceQueue.Enqueue(w);
+            }
+            if (!_isPlaying) {
+                PlayNextInQueue();
+            }
+        }
+
+        private void PlayNextInQueue() {
+            while (_sentenceQueue.Count > 0) {
+                string next = _sentenceQueue.Dequeue();
+                if (PlaySign(next)) {
+                    // Successfully started playing a sign, break out of the loop
+                    return;
+                }
+                // If PlaySign returned false (word not found), the loop will immediately try the next word.
+            }
+            
+            // If we exhausted the queue without playing anything, safely stop.
+            Stop();
+        }
+
         // Blending from previous state
         private Vector3 _blendStartLWrist, _blendStartRWrist;
         private Vector3 _blendStartLElbow, _blendStartRElbow;
@@ -267,6 +294,11 @@ namespace SignLoop.Avatar
             return false;
         }
 
+#if UNITY_WEBGL && !UNITY_EDITOR
+        [System.Runtime.InteropServices.DllImport("__Internal")]
+        private static extern void ReactDispatchString(string eventName, string str);
+#endif
+
         public void PlayClip(ISLSignClipData clip)
         {
             if (clip == null || clip.frames == null || clip.frames.Length == 0) return;
@@ -278,6 +310,14 @@ namespace SignLoop.Avatar
             _isPlaying = true;
             _isPaused = false;
             _blendTimer = 0f;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            try {
+                ReactDispatchString("OnSignStarted", _currentClip.signName);
+            } catch (System.Exception e) {
+                Debug.LogWarning("ReactBridge failed to dispatch: " + e.Message);
+            }
+#endif
 
             // Capture initial positions for smooth 300ms blending
             if (armIK != null && armIK.LeftArmTarget != null)
@@ -311,6 +351,12 @@ namespace SignLoop.Avatar
             _isPaused = false;
             _playheadTime = 0f;
             _currentClip = null;
+
+#if UNITY_WEBGL && !UNITY_EDITOR
+            try {
+                ReactDispatchString("OnSignStopped", "");
+            } catch (System.Exception) {}
+#endif
 
             if (armIK != null)
             {
@@ -367,7 +413,11 @@ namespace SignLoop.Avatar
                 }
                 else
                 {
-                    Stop();
+                    if (_sentenceQueue != null && _sentenceQueue.Count > 0) {
+                        PlayNextInQueue();
+                    } else {
+                        Stop();
+                    }
                     return;
                 }
             }
