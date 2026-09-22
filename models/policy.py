@@ -60,21 +60,16 @@ class ISLPolicyNetwork(nn.Module):
         )
 
     def forward(self, x):
-        # Ensure tensor is batched and properly flattened to (Batch, Sequence, 225)
+        # 1. Ensure tensor has a batch dimension: (30, 225) -> (1, 30, 225)
         if x.dim() == 2:
-            x = x.unsqueeze(0) # (30, 225) -> (1, 30, 225)
-            
-        if x.dim() == 4:
-            # (Batch, 30, 75, 3) -> (Batch, 30, 225)
-            batch_size, seq_len, num_nodes, coords = x.shape
-            x = x.view(batch_size, seq_len, num_nodes * coords)
-            
-        if x.dim() == 3 and x.shape[-1] == 3:
-            # Unbatched (30, 75, 3) -> Batched (1, 30, 225)
             x = x.unsqueeze(0)
+            
+        # 2. If spatial shape is (Batch, 30, 75, 3), flatten nodes to (Batch, 30, 225)
+        if x.dim() == 4:
             batch_size, seq_len, num_nodes, coords = x.shape
             x = x.view(batch_size, seq_len, num_nodes * coords)
 
+        # 3. Safely capture the 3D dimensions
         batch_size, seq_len, feat_dim = x.shape
         
         # Project keypoint features
