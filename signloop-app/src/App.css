@@ -98,3 +98,45 @@ button.active {
   border-radius: 4px;
   border: none;
 }
+
+.confidence-badge {
+  margin-left: auto;
+  font-size: 0.85rem;
+  font-weight: bold;
+  padding: 5px 12px;
+  border-radius: 20px;
+  background-color: #007bff;
+  color: white;
+}
+
+.controls-row {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.record-btn {
+  width: 100%;
+  max-width: 450px;
+  text-align: center;
+  font-size: 1rem;
+  padding: 14px 20px;
+  border-radius: 8px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.record-btn:hover {
+  background-color: #218838;
+}
+
+.record-btn.recording {
+  background-color: #dc3545;
+  transform: scale(0.98);
+  box-shadow: 0 0 15px rgba(220, 53, 69, 0.6);
+}

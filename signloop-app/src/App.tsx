@@ -1,50 +1,89 @@
 import { useState, useRef, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-// Direct module imports
-import * as mpHolistic from "@mediapipe/holistic/holistic.js";
-import * as mpCamera from "@mediapipe/camera_utils/camera_utils.js";
-import * as mpDrawing from "@mediapipe/drawing_utils/drawing_utils.js";
 
-// Safe constructor resolvers that check all possible export structures
-const Holistic = 
-  (mpHolistic as any).Holistic || 
-  (mpHolistic as any).default?.Holistic || 
-  (window as any).Holistic;
-
-const POSE_CONNECTIONS = 
-  (mpHolistic as any).POSE_CONNECTIONS || 
-  (mpHolistic as any).default?.POSE_CONNECTIONS || 
-  (window as any).POSE_CONNECTIONS;
-
-const HAND_CONNECTIONS = 
-  (mpHolistic as any).HAND_CONNECTIONS || 
-  (mpHolistic as any).default?.HAND_CONNECTIONS || 
-  (window as any).HAND_CONNECTIONS;
-
-const Camera = 
-  (mpCamera as any).Camera || 
-  (mpCamera as any).default?.Camera || 
-  (window as any).Camera;
-
-const drawConnectors = 
-  (mpDrawing as any).drawConnectors || 
-  (mpDrawing as any).default?.drawConnectors || 
-  (window as any).drawConnectors;
-
-const drawLandmarks = 
-  (mpDrawing as any).drawLandmarks || 
-  (mpDrawing as any).default?.drawLandmarks || 
-  (window as any).drawLandmarks;
-
+import vocabData from "./vocab.json";
 import "./App.css";
+
+// MediaPipe is loaded as scripts from index.html
+const Holistic = (window as any).Holistic;
+const Camera = (window as any).Camera;
+
+const POSE_CONNECTIONS = (window as any).POSE_CONNECTIONS;
+const HAND_CONNECTIONS = (window as any).HAND_CONNECTIONS;
+
+const drawConnectors = (window as any).drawConnectors;
+const drawLandmarks = (window as any).drawLandmarks;
+
+
+// Helper: Normalizes a 30-frame sequence (30 frames x 75 landmarks x 3)
+const normalizeSequence = (sequence: number[][]): number[] => {
+  const normalized: number[] = [];
+
+  for (let f = 0; f < sequence.length; f++) {
+    const frame = sequence[f]; // 225 numbers (75 landmarks * 3)
+
+    // Nose is landmark 0 (indices 0, 1, 2)
+    const noseX = frame[0];
+    const noseY = frame[1];
+    const noseZ = frame[2];
+
+    // Left shoulder is landmark 11 (indices 33, 34, 35)
+    // Right shoulder is landmark 12 (indices 36, 37, 38)
+    const dx = frame[33] - frame[36];
+    const dy = frame[34] - frame[37];
+    const dz = frame[35] - frame[38];
+    const shoulderWidth = Math.sqrt(dx * dx + dy * dy + dz * dz) + 1e-6;
+
+    // Center on nose and scale by shoulder width
+    for (let i = 0; i < 75; i++) {
+      const idx = i * 3;
+      normalized.push((frame[idx] - noseX) / shoulderWidth);
+      normalized.push((frame[idx + 1] - noseY) / shoulderWidth);
+      normalized.push((frame[idx + 2] - noseZ) / shoulderWidth);
+    }
+  }
+
+  return normalized;
+};
+
+// Helper: Resamples any arbitrary length frame sequence to exactly 30 frames
+const resampleToWindow = (sequence: number[][], targetLength: number = 30): number[][] => {
+  const n = sequence.length;
+  if (n === targetLength) return sequence;
+  if (n < 2) return sequence;
+
+  const resampled: number[][] = [];
+  for (let i = 0; i < targetLength; i++) {
+    const idx = Math.floor((i * (n - 1)) / (targetLength - 1));
+    resampled.push(sequence[idx]);
+  }
+  return resampled;
+};
+
+// Helper: Cleans dataset prefix numbers like "10. Energy" -> "Energy"
+const cleanWord = (raw: string): string => {
+  if (!raw) return "";
+  const text = raw.includes(". ") ? raw.split(". ").slice(1).join(". ") : raw;
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
+
+
+
 function App() {
   const [activeChannel, setActiveChannel] = useState<'channel1' | 'channel2'>('channel1');
   const [translation, setTranslation] = useState<string>("Waiting for signs...");
+  const [confidence, setConfidence] = useState<number | null>(null);
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const isInferringRef = useRef(false);
+  const holisticRef = useRef<any>(null);
 
-  // The rolling 30-frame coordinate buffer (State Space S_t)
+  // The rolling coordinate buffer (State Space S_t)
   const stateBufferRef = useRef<number[][]>([]);
+  const isRecordingRef = useRef(false);
+  const recordBufferRef = useRef<number[][]>([]);
 
   // Flattens X, Y, Z for both hands and pose into a 1D array
   const extractCoordinates = (results: any) => {
@@ -63,6 +102,71 @@ function App() {
     return [...pose, ...leftHand, ...rightHand];
   };
 
+  const startRecording = () => {
+    isRecordingRef.current = true;
+    setIsRecording(true);
+    recordBufferRef.current = [];
+    setTranslation("Recording sign gesture...");
+    setConfidence(null);
+  };
+
+  const stopRecordingAndInfer = async () => {
+    if (!isRecordingRef.current) return;
+    isRecordingRef.current = false;
+    setIsRecording(false);
+
+    const buffer = recordBufferRef.current;
+    if (buffer.length < 10) {
+      setTranslation("Gesture too short, please sign again");
+      return;
+    }
+
+    setTranslation("Analyzing full gesture...");
+    const resampled = resampleToWindow(buffer, 30);
+    const flatTensor = normalizeSequence(resampled);
+
+    try {
+      const res: string = await invoke("run_model_inference", { coordinates: flatTensor });
+      const data = JSON.parse(res);
+      if (data.predicted_id >= 0) {
+        const conf = Math.round(data.confidence * 100);
+        setConfidence(conf);
+        if (data.confidence >= 0.55) {
+          const rawWord = vocabData[data.predicted_id] ?? `Class ID ${data.predicted_id}`;
+          setTranslation(cleanWord(rawWord));
+        } else {
+          setTranslation(`Low confidence (${conf}%) - please repeat sign clearly`);
+        }
+      }
+    } catch (err) {
+      console.error("Inference IPC error:", err);
+      setTranslation("Inference error");
+    }
+  };
+
+  // Keyboard Spacebar hold-to-sign listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.code === "Space" && !e.repeat && activeChannel === "channel1") {
+        e.preventDefault();
+        startRecording();
+      }
+    };
+    const handleKeyUp = (e: KeyboardEvent) => {
+      if (e.code === "Space" && activeChannel === "channel1") {
+        e.preventDefault();
+        stopRecordingAndInfer();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("keyup", handleKeyUp);
+    };
+  }, [activeChannel]);
+
   useEffect(() => {
     let camera: any = null;
 
@@ -71,18 +175,25 @@ function App() {
       const canvasElement = canvasRef.current;
       const canvasCtx = canvasElement.getContext('2d');
 
-      const holistic = new Holistic({
-        locateFile: (file: string) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`
-      });
+      // Initialize Holistic only once across renders to avoid WASM MEMFS EEXIST collisions
+      if (!holisticRef.current) {
+        const h = new Holistic({
+          locateFile: (file: string) => `/mediapipe/holistic/${file}`
+        });
 
-      holistic.setOptions({
-        modelComplexity: 1,
-        smoothLandmarks: true,
-        enableSegmentation: false,
-        refineFaceLandmarks: false,
-        minDetectionConfidence: 0.5,
-        minTrackingConfidence: 0.5
-      });
+        h.setOptions({
+          modelComplexity: 1,
+          smoothLandmarks: true,
+          enableSegmentation: false,
+          refineFaceLandmarks: false,
+          minDetectionConfidence: 0.5,
+          minTrackingConfidence: 0.5
+        });
+
+        holisticRef.current = h;
+      }
+
+      const holistic = holisticRef.current;
 
       holistic.onResults((results: any) => {
         if (!canvasCtx || !canvasElement || !videoElement) return;
@@ -108,26 +219,80 @@ function App() {
         }
         canvasCtx.restore();
 
-        // Extract coordinates and update the rolling buffer
         const frameData = extractCoordinates(results);
-        stateBufferRef.current.push(frameData);
 
-        if (stateBufferRef.current.length > 30) {
-          stateBufferRef.current.shift();
+        // 1. Manual Recording Mode
+        if (isRecordingRef.current) {
+          recordBufferRef.current.push(frameData);
+          return;
         }
 
-        // When the 30-frame rolling window is full, send it to Rust!
-        if (stateBufferRef.current.length === 30) {
-        const flatTensor = stateBufferRef.current.flat();
-        
-        invoke("run_model_inference", { coordinates: flatTensor })
-          .then((res: any) => {
-            console.log("Prediction from Rust backend:", res);
-            // Update the state with the string returned by Rust
-            setTranslation(res);
-          })
-          .catch((err) => console.error("Inference IPC error:", err));
-      }
+        // 2. Automatic Continuous Gesture Mode
+        const hasHands = Boolean(results.leftHandLandmarks || results.rightHandLandmarks);
+
+        if (hasHands) {
+          stateBufferRef.current.push(frameData);
+          if (stateBufferRef.current.length > 45) {
+            stateBufferRef.current.shift();
+          }
+        } else {
+          // If hands were lowered and we had captured a full sign stroke (>= 20 frames):
+          if (stateBufferRef.current.length >= 20 && !isInferringRef.current) {
+            isInferringRef.current = true;
+            const resampled = resampleToWindow(stateBufferRef.current, 30);
+            const flatTensor = normalizeSequence(resampled);
+            stateBufferRef.current = [];
+
+            invoke("run_model_inference", { coordinates: flatTensor })
+              .then((res: any) => {
+                const data = JSON.parse(res);
+                if (data.predicted_id >= 0) {
+                  const conf = Math.round(data.confidence * 100);
+                  setConfidence(conf);
+                  if (data.confidence >= 0.60) {
+                    const rawWord = vocabData[data.predicted_id] ?? `Class ID ${data.predicted_id}`;
+                    setTranslation(cleanWord(rawWord));
+                  }
+                }
+              })
+              .catch((err) => console.error("Inference IPC error:", err))
+              .finally(() => { isInferringRef.current = false; });
+            return;
+          }
+
+          if (stateBufferRef.current.length > 0) {
+            stateBufferRef.current.shift();
+          }
+        }
+
+        // Continuous window trigger: when buffer reaches 40 frames of active hands
+        if (
+          stateBufferRef.current.length >= 40 &&
+          hasHands &&
+          !isInferringRef.current
+        ) {
+          isInferringRef.current = true;
+          const resampled = resampleToWindow(stateBufferRef.current, 30);
+          const flatTensor = normalizeSequence(resampled);
+
+          invoke("run_model_inference", { coordinates: flatTensor })
+            .then((res: any) => {
+              const data = JSON.parse(res);
+              if (data.predicted_id >= 0) {
+                const conf = Math.round(data.confidence * 100);
+                setConfidence(conf);
+                if (data.confidence >= 0.65) {
+                  const rawWord = vocabData[data.predicted_id] ?? `Class ID ${data.predicted_id}`;
+                  setTranslation(cleanWord(rawWord));
+                  stateBufferRef.current = []; // Clear on confident detection
+                } else {
+                  stateBufferRef.current = stateBufferRef.current.slice(15);
+                }
+              }
+            })
+            .catch((err) => console.error("Inference IPC error:", err))
+            .finally(() => { isInferringRef.current = false; });
+        }
       });
 
       // Pull Camera from the global window object loaded via CDN
@@ -144,13 +309,12 @@ function App() {
         height: 480
       });
       camera.start();
+      return () => {
+        if (camera) {
+          camera.stop();
+        }
+      };
     }
-
-    return () => {
-      if (camera) {
-        camera.stop();
-      }
-    };
   }, [activeChannel]);
 
   return (
@@ -178,12 +342,32 @@ function App() {
           <div className="channel-view">
             <h3>Channel 1: Perception Layer</h3>
             <div className="video-container">
-              <video ref={videoRef} className="webcam-feed" />
+              <video
+              ref={videoRef}
+              className="webcam-feed"
+              autoPlay
+              playsInline
+              muted
+            />
               <canvas ref={canvasRef} className="landmark-overlay" />
             </div>
             <div className="output-console">
               {/* Dynamically render the live translation output */}
               <p className="subtitle-text">{translation}</p>
+              {confidence !== null && (
+                <span className="confidence-badge">{confidence}% Conf</span>
+              )}
+            </div>
+            <div className="controls-row">
+              <button
+                className={`record-btn ${isRecording ? "recording" : ""}`}
+                onMouseDown={startRecording}
+                onMouseUp={stopRecordingAndInfer}
+                onTouchStart={startRecording}
+                onTouchEnd={stopRecordingAndInfer}
+              >
+                {isRecording ? "● Recording Gesture... (Release to Translate)" : "🖐️ Hold Spacebar (or Click & Hold) to Sign"}
+              </button>
             </div>
           </div>
         ) : (
