@@ -102,21 +102,48 @@ function App() {
   // The rolling 30-frame coordinate buffer (State Space S_t)
   const stateBufferRef = useRef<number[][]>([]);
 
-  // Flattens X, Y, Z for both hands and pose into a 1D array
+  // Extracts coordinates and normalizes them for the ML Policy
   const extractCoordinates = (results: any) => {
-    const pose = results.poseLandmarks 
-      ? results.poseLandmarks.map((res: any) => [res.x, res.y, res.z]).flat() 
-      : new Array(33 * 3).fill(0);
+    let pose = new Array(33).fill([0, 0, 0]);
+    if (results.poseLandmarks) {
+      pose = results.poseLandmarks.map((res: any) => [res.x, res.y, res.z || 0]);
+    }
+    
+    let leftHand = new Array(21).fill([0, 0, 0]);
+    if (results.leftHandLandmarks) {
+      leftHand = results.leftHandLandmarks.map((res: any) => [res.x, res.y, res.z || 0]);
+    }
 
-    const leftHand = results.leftHandLandmarks 
-      ? results.leftHandLandmarks.map((res: any) => [res.x, res.y, res.z]).flat() 
-      : new Array(21 * 3).fill(0);
+    let rightHand = new Array(21).fill([0, 0, 0]);
+    if (results.rightHandLandmarks) {
+      rightHand = results.rightHandLandmarks.map((res: any) => [res.x, res.y, res.z || 0]);
+    }
 
-    const rightHand = results.rightHandLandmarks 
-      ? results.rightHandLandmarks.map((res: any) => [res.x, res.y, res.z]).flat() 
-      : new Array(21 * 3).fill(0);
+    const allCoords = [...pose, ...leftHand, ...rightHand]; // 75 landmarks total
 
-    return [...pose, ...leftHand, ...rightHand];
+    // ML Normalization: Center on Nose, Scale by Shoulder Width
+    const nose = pose[0];
+    const leftShoulder = pose[11];
+    const rightShoulder = pose[12];
+    
+    // Euclidean distance between shoulders
+    let shoulderWidth = Math.sqrt(
+      Math.pow(leftShoulder[0] - rightShoulder[0], 2) +
+      Math.pow(leftShoulder[1] - rightShoulder[1], 2) +
+      Math.pow(leftShoulder[2] - rightShoulder[2], 2)
+    );
+    
+    // Prevent division by zero if shoulders aren't tracked securely
+    if (shoulderWidth < 0.000001) shoulderWidth = 0.000001;
+
+    // Apply the (Coord - Nose) / ShoulderWidth formula
+    const normalized = allCoords.map(coord => [
+      (coord[0] - nose[0]) / shoulderWidth,
+      (coord[1] - nose[1]) / shoulderWidth,
+      (coord[2] - nose[2]) / shoulderWidth
+    ]);
+
+    return normalized.flat();
   };
 
   useEffect(() => {

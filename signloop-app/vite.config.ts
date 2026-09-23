@@ -4,9 +4,29 @@ import react from "@vitejs/plugin-react";
 import process from "node:process";
 const host = process.env.TAURI_DEV_HOST;
 
+// Custom plugin to handle Unity WebGL gzip headers
+const unityWebGLPlugin = () => ({
+  name: 'unity-webgl-headers',
+  configureServer(server: any) {
+    server.middlewares.use((req: any, res: any, next: any) => {
+      if (req.url && req.url.endsWith('.gz')) {
+        res.setHeader('Content-Encoding', 'gzip');
+        if (req.url.endsWith('.wasm.gz')) {
+          res.setHeader('Content-Type', 'application/wasm');
+        } else if (req.url.endsWith('.js.gz')) {
+          res.setHeader('Content-Type', 'application/javascript');
+        } else if (req.url.endsWith('.data.gz')) {
+          res.setHeader('Content-Type', 'application/octet-stream');
+        }
+      }
+      next();
+    });
+  }
+});
+
 // https://vite.dev/config/
 export default defineConfig(() => ({
-  plugins: [react()],
+  plugins: [react(), unityWebGLPlugin()],
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
