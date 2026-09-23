@@ -16,14 +16,36 @@ class ISLEnv(gym.Env):
     Action Space: Discrete word selection from the ISL vocabulary.
     """
     
-    def __init__(self, data_path="dataset/data/include_keypoints_master.npz"):
+    def __init__(self, data_path="dataset/data/include_keypoints_master.npz", 
+                 alpha=1.5, beta=0.1, lambda_weight=0.01,split="train"):
         super(ISLEnv, self).__init__()
+        
+        self.alpha = alpha
+        self.beta = beta
+        self.lambda_weight = lambda_weight
         
         # 1. LOAD THE MASTER DATASET
         print(f"Loading environment dataset from {data_path}...")
         data = np.load(data_path, allow_pickle=True)
-        self.X = data["X"]
-        self.y = data["y"]
+
+        # Create an 80/20 train/test split
+        total_samples = len(data["X"])
+        split_idx = int(total_samples * 0.8)
+        
+        if split == "train":
+            self.X = data["X"][:split_idx]
+            self.y = data["y"][:split_idx]
+        elif split == "test":
+            self.X = data["X"][split_idx:]
+            self.y = data["y"][split_idx:]
+
+        # ADD THIS BLOCK: Flatten the 4D array (N, 30, 75, 3) to 3D (N, 30, 225)
+        if self.X.ndim == 4:
+            self.X = self.X.reshape(self.X.shape[0], 30, 225)
+            
+        self.label_map = json.loads(str(data["label_map"]))
+
+
         self.label_map = json.loads(str(data["label_map"]))
         
         # THE FIX: Create the id_to_word dictionary by flipping the label_map
@@ -87,8 +109,8 @@ class ISLEnv(gym.Env):
             correct_text=correct_text,
             predicted_text=predicted_text,
             frame_buffer=current_frame_buffer,
-            alpha=1.0, 
-            beta=0.2, 
+            alpha=1.5, 
+            beta=0.1, 
             lambda_weight=0.01
         )
 
