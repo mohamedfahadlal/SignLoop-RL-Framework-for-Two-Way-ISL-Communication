@@ -1,0 +1,1417 @@
+{
+  "signName": "You",
+  "duration": 1.2,
+  "frameCount": 30,
+  "frames": [
+    {
+      "time": 0.0,
+      "leftWristPos": {
+        "x": -0.16936329007148743,
+        "y": 0.7887713015079498,
+        "z": 0.22153294831514359
+      },
+      "leftElbowHint": {
+        "x": -0.37117189168930054,
+        "y": 1.0792693495750427,
+        "z": -0.15548669546842575
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.2224801480770111,
+        "y": 0.785415530204773,
+        "z": 0.2764852046966553
+      },
+      "rightElbowHint": {
+        "x": 0.3950868546962738,
+        "y": 1.0742781162261963,
+        "z": -0.11323237419128418
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.034482758620689655,
+      "leftWristPos": {
+        "x": -0.16437231997648874,
+        "y": 0.7988463838895162,
+        "z": 0.21670902272065481
+      },
+      "leftElbowHint": {
+        "x": -0.3654531240463257,
+        "y": 1.0849236249923706,
+        "z": -0.1586974412202835
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.21803041795889536,
+        "y": 0.7855454087257385,
+        "z": 0.28743646542231244
+      },
+      "rightElbowHint": {
+        "x": 0.3932592272758484,
+        "y": 1.0771889686584473,
+        "z": -0.10882158329089482
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.06896551724137931,
+      "leftWristPos": {
+        "x": -0.15843462944030762,
+        "y": 0.8097660938898722,
+        "z": 0.20938767989476523
+      },
+      "leftElbowHint": {
+        "x": -0.35863890250523883,
+        "y": 1.0919952789942424,
+        "z": -0.15677342315514883
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.21306050817171732,
+        "y": 0.7834682861963908,
+        "z": 0.2810097535451253
+      },
+      "rightElbowHint": {
+        "x": 0.39444520076115924,
+        "y": 1.0799445311228435,
+        "z": -0.1041237364212672
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.10344827586206896,
+      "leftWristPos": {
+        "x": -0.15544491509596506,
+        "y": 0.8183574477831522,
+        "z": 0.19786442319552103
+      },
+      "leftElbowHint": {
+        "x": -0.35703633228937787,
+        "y": 1.097275932629903,
+        "z": -0.16699511309464773
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.20706956088542938,
+        "y": 0.7897455096244812,
+        "z": 0.2761462132136027
+      },
+      "rightElbowHint": {
+        "x": 0.3959846297899882,
+        "y": 1.0866518020629883,
+        "z": -0.10328153024117152
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.13793103448275862,
+      "leftWristPos": {
+        "x": -0.15264003972212473,
+        "y": 0.841210941473643,
+        "z": 0.1892492175102234
+      },
+      "leftElbowHint": {
+        "x": -0.3692636787891388,
+        "y": 1.103376865386963,
+        "z": -0.17729264001051584
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.1877506822347641,
+        "y": 0.8192143042882284,
+        "z": 0.2693673372268677
+      },
+      "rightElbowHint": {
+        "x": 0.40363479653994244,
+        "y": 1.0909172693888347,
+        "z": -0.10328153024117152
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.1724137931034483,
+      "leftWristPos": {
+        "x": -0.14497222006320953,
+        "y": 0.9155741135279337,
+        "z": 0.2148532768090566
+      },
+      "leftElbowHint": {
+        "x": -0.3847245474656423,
+        "y": 1.120818018913269,
+        "z": -0.17601538201173147
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.15403643002112707,
+        "y": 0.9066170851389567,
+        "z": 0.3186067044734955
+      },
+      "rightElbowHint": {
+        "x": 0.41007282336552936,
+        "y": 1.10365625222524,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.20689655172413793,
+      "leftWristPos": {
+        "x": -0.1251594622929891,
+        "y": 1.0005934635798137,
+        "z": 0.2854322592417399
+      },
+      "leftElbowHint": {
+        "x": -0.4179594616095225,
+        "y": 1.1167018016179402,
+        "z": -0.14996804048617682
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 53.07085418701172,
+      "leftIndexCurl": 58.19488922754923,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.11804266770680745,
+        "y": 1.0176604588826497,
+        "z": 0.3630007902781169
+      },
+      "rightElbowHint": {
+        "x": 0.4282792607943217,
+        "y": 1.0996191104253132,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 44.28780643145243,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 82.4593505859375,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.2413793103448276,
+      "leftWristPos": {
+        "x": -0.10954891890287399,
+        "y": 1.0802340110143025,
+        "z": 0.3583604097366333
+      },
+      "leftElbowHint": {
+        "x": -0.4449919064839681,
+        "y": 1.1030126810073853,
+        "z": -0.11796420315901439
+      },
+      "leftWristRot": {
+        "x": 0.41908881068229675,
+        "y": -0.2554928958415985,
+        "z": 0.8641770482063293,
+        "w": -0.11084223538637161
+      },
+      "leftThumbCurl": 53.07085418701172,
+      "leftIndexCurl": 31.421746889750164,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.09190915524959564,
+        "y": 1.1132766803105671,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.4430820047855377,
+        "y": 1.0858960549036663,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": -0.357528954744339,
+        "y": 0.04343988373875618,
+        "z": 0.846108615398407,
+        "w": 0.39292025566101074
+      },
+      "rightThumbCurl": 23.983824173609417,
+      "rightIndexCurl": 57.76653607686361,
+      "rightMiddleCurl": 58.117878119150795,
+      "rightRingCurl": 58.5209051767985,
+      "rightPinkyCurl": 55.40424656867981,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.27586206896551724,
+      "leftWristPos": {
+        "x": -0.09988415489594142,
+        "y": 1.1196235418319702,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.4673369725545247,
+        "y": 1.0763343175252278,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.4224468767642975,
+        "y": 0.26912540197372437,
+        "z": 0.7570453882217407,
+        "w": 0.4195145070552826
+      },
+      "leftThumbCurl": 34.147693951924644,
+      "leftIndexCurl": 5.176302433013916,
+      "leftMiddleCurl": 57.66246215502421,
+      "leftRingCurl": 57.59412829081217,
+      "leftPinkyCurl": 57.25607192516327,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.07640034705400467,
+        "y": 1.1541239420572917,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.4550253947575887,
+        "y": 1.0543818076451619,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": -0.380758672952652,
+        "y": 0.20272231101989746,
+        "z": 0.8335762619972229,
+        "w": 0.3450755178928375
+      },
+      "rightThumbCurl": 4.504574696222941,
+      "rightIndexCurl": 30.640830914179485,
+      "rightMiddleCurl": 30.92762804031372,
+      "rightRingCurl": 30.954888979593914,
+      "rightPinkyCurl": 27.91045554478963,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.3103448275862069,
+      "leftWristPos": {
+        "x": -0.104239155848821,
+        "y": 1.1393611828486125,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.4724247455596924,
+        "y": 1.063582221666972,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.18275998532772064,
+        "y": 0.4661722183227539,
+        "z": 0.851820707321167,
+        "w": 0.15389513969421387
+      },
+      "leftThumbCurl": 26.335801760355633,
+      "leftIndexCurl": 6.1967471440633135,
+      "leftMiddleCurl": 30.811111052831013,
+      "leftRingCurl": 30.56733711560567,
+      "leftPinkyCurl": 29.88266122341156,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.06698380534847577,
+        "y": 1.1624229749043782,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.4489314953486125,
+        "y": 1.0359731515248616,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": -0.2699349522590637,
+        "y": -0.2028442621231079,
+        "z": -0.19461913406848907,
+        "w": 0.9209303259849548
+      },
+      "rightThumbCurl": 6.78507645924886,
+      "rightIndexCurl": 5.4250045617421465,
+      "rightMiddleCurl": 5.8911004066467285,
+      "rightRingCurl": 5.8703915278116865,
+      "rightPinkyCurl": 4.969322681427002,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.3448275862068966,
+      "leftWristPos": {
+        "x": -0.10614216079314549,
+        "y": 1.1454079548517864,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.4699338674545288,
+        "y": 1.0599000056584675,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.2031431794166565,
+        "y": 0.4869522452354431,
+        "z": 0.8425120711326599,
+        "w": 0.10855281352996826
+      },
+      "leftThumbCurl": 6.598499139149983,
+      "leftIndexCurl": 8.111889044443766,
+      "leftMiddleCurl": 4.068584521611531,
+      "leftRingCurl": 3.978940407435099,
+      "leftPinkyCurl": 2.6163007020950317,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.06010059515635172,
+        "y": 1.1648549636205037,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.4368398189544678,
+        "y": 1.0274604558944702,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": -0.3352228105068207,
+        "y": -0.13991013169288635,
+        "z": 0.931517481803894,
+        "w": 0.01805844157934189
+      },
+      "rightThumbCurl": 9.449432849884033,
+      "rightIndexCurl": 6.780673106511434,
+      "rightMiddleCurl": 7.525739351908366,
+      "rightRingCurl": 7.228421847025554,
+      "rightPinkyCurl": 6.77963121732076,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.3793103448275862,
+      "leftWristPos": {
+        "x": -0.10258794327576955,
+        "y": 1.145108421643575,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.4621365964412689,
+        "y": 1.0650102694829304,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.23040150105953217,
+        "y": 0.5256741642951965,
+        "z": 0.8181135058403015,
+        "w": 0.03566642478108406
+      },
+      "leftThumbCurl": 6.928887526194255,
+      "leftIndexCurl": 8.125781536102295,
+      "leftMiddleCurl": 4.417494932810466,
+      "leftRingCurl": 3.8795966307322183,
+      "leftPinkyCurl": 2.7780231634775796,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.055285232762495674,
+        "y": 1.1638007164001465,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.4229395091533661,
+        "y": 1.0305360555648804,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": 0.035190749913454056,
+        "y": -0.3418292999267578,
+        "z": 0.15933898091316223,
+        "w": 0.9254865646362305
+      },
+      "rightThumbCurl": 28.928682327270508,
+      "rightIndexCurl": 33.90637826919556,
+      "rightMiddleCurl": 34.715989430745445,
+      "rightRingCurl": 34.79443804423014,
+      "rightPinkyCurl": 34.27342224121094,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.41379310344827586,
+      "leftWristPos": {
+        "x": -0.09021079540252686,
+        "y": 1.1449658870697021,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.446929266055425,
+        "y": 1.078615427017212,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.215007022023201,
+        "y": 0.54118412733078,
+        "z": 0.8099355101585388,
+        "w": 0.06997345387935638
+      },
+      "leftThumbCurl": 6.833942572275798,
+      "leftIndexCurl": 8.050111452738443,
+      "leftMiddleCurl": 5.1591386795043945,
+      "leftRingCurl": 4.43234920501709,
+      "leftPinkyCurl": 2.8795814514160156,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.05106068899234136,
+        "y": 1.1624656518300374,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.41233545541763306,
+        "y": 1.0436470905939739,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 32.273942629496254,
+      "rightIndexCurl": 33.2943689028422,
+      "rightMiddleCurl": 34.90224997202555,
+      "rightRingCurl": 35.34057140350342,
+      "rightPinkyCurl": 38.84751828511556,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.4482758620689655,
+      "leftWristPos": {
+        "x": -0.07774968942006429,
+        "y": 1.1457055807113647,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.4315735201040904,
+        "y": 1.0938177506128948,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.3630761206150055,
+        "y": 0.45513027906417847,
+        "z": 0.7741154432296753,
+        "w": 0.24855053424835205
+      },
+      "leftThumbCurl": 5.554771423339844,
+      "leftIndexCurl": 7.899470329284668,
+      "leftMiddleCurl": 7.1155931154886884,
+      "leftRingCurl": 6.52770201365153,
+      "leftPinkyCurl": 5.591342210769653,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.048321754982074104,
+        "y": 1.1590181986490886,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.40284645557403564,
+        "y": 1.059485952059428,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": -0.17650018632411957,
+        "y": -0.3501576781272888,
+        "z": 0.1624312698841095,
+        "w": 0.9054574966430664
+      },
+      "rightThumbCurl": 34.09295336405436,
+      "rightIndexCurl": 33.23082605997721,
+      "rightMiddleCurl": 33.70616658528646,
+      "rightRingCurl": 33.27153984705607,
+      "rightPinkyCurl": 36.87981406847636,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.4827586206896552,
+      "leftWristPos": {
+        "x": -0.07030171900987625,
+        "y": 1.147499442100525,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.419733186562856,
+        "y": 1.1049755016962688,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.26119497418403625,
+        "y": -0.1596228927373886,
+        "z": -0.10836084187030792,
+        "w": 0.9458094835281372
+      },
+      "leftThumbCurl": 5.107298056284587,
+      "leftIndexCurl": 8.789475917816162,
+      "leftMiddleCurl": 8.421786626180014,
+      "leftRingCurl": 8.398691972096762,
+      "leftPinkyCurl": 7.335443417231242,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.045281785229841866,
+        "y": 1.1592965523401897,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.3922636906305949,
+        "y": 1.0742574135462444,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": -0.34759965538978577,
+        "y": 0.355343222618103,
+        "z": 0.7917299270629883,
+        "w": -0.3550625741481781
+      },
+      "rightThumbCurl": 18.73434575398763,
+      "rightIndexCurl": 8.533592542012533,
+      "rightMiddleCurl": 17.239574432373047,
+      "rightRingCurl": 28.869274934132893,
+      "rightPinkyCurl": 36.87981406847636,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.5172413793103449,
+      "leftWristPos": {
+        "x": -0.07000318914651871,
+        "y": 1.150312344233195,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.41496692101160687,
+        "y": 1.1089623371760051,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.2422160655260086,
+        "y": 0.15178808569908142,
+        "z": 0.9557226300239563,
+        "w": 0.06989894062280655
+      },
+      "leftThumbCurl": 5.278956413269043,
+      "leftIndexCurl": 8.498400370279947,
+      "leftMiddleCurl": 8.695169448852539,
+      "leftRingCurl": 8.703127225240072,
+      "leftPinkyCurl": 8.502249717712402,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.04295065253973007,
+        "y": 1.1626837253570557,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.3834149142106374,
+        "y": 1.0816679398218791,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": 0.4030156135559082,
+        "y": 0.1487930864095688,
+        "z": 0.4066547453403473,
+        "w": 0.8062698245048523
+      },
+      "rightThumbCurl": 13.133398135503134,
+      "rightIndexCurl": 32.11929162343343,
+      "rightMiddleCurl": 27.152948061625164,
+      "rightRingCurl": 36.67906999588013,
+      "rightPinkyCurl": 49.41942652066549,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.5517241379310345,
+      "leftWristPos": {
+        "x": -0.0688327004512151,
+        "y": 1.1406269868214924,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.4172534942626953,
+        "y": 1.0982388257980347,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.2601916790008545,
+        "y": 0.3002452850341797,
+        "z": 0.9172586798667908,
+        "w": 0.028099767863750458
+      },
+      "leftThumbCurl": 26.295430183410645,
+      "leftIndexCurl": 33.507041931152344,
+      "leftMiddleCurl": 33.48124154408773,
+      "leftRingCurl": 33.19617112477621,
+      "leftPinkyCurl": 33.05684947967529,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.046120249976714454,
+        "y": 1.1541130145390828,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.38426269094149273,
+        "y": 1.0756422678629558,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": -0.2167460024356842,
+        "y": 0.3206513822078705,
+        "z": 0.9220262765884399,
+        "w": 0.008442406542599201
+      },
+      "rightThumbCurl": 8.279087781906128,
+      "rightIndexCurl": 58.06062984466553,
+      "rightMiddleCurl": 53.59651438395182,
+      "rightRingCurl": 63.8691660563151,
+      "rightPinkyCurl": 68.40545272827148,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.5862068965517241,
+      "leftWristPos": {
+        "x": -0.06531794120868047,
+        "y": 1.1063562234242756,
+        "z": 0.4000000059604645
+      },
+      "leftElbowHint": {
+        "x": -0.419678529103597,
+        "y": 1.088070273399353,
+        "z": -0.10000000149011612
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 45.335675398508705,
+      "leftIndexCurl": 58.84858830769857,
+      "leftMiddleCurl": 59.163675467173256,
+      "leftRingCurl": 58.83039665222168,
+      "leftPinkyCurl": 58.894953886667885,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.050381723791360855,
+        "y": 1.1216374635696411,
+        "z": 0.4000000059604645
+      },
+      "rightElbowHint": {
+        "x": 0.3949993848800659,
+        "y": 1.0657942295074463,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": -0.22008772194385529,
+        "y": 0.37862980365753174,
+        "z": 0.8633774518966675,
+        "w": 0.2505597472190857
+      },
+      "rightThumbCurl": 23.63769539197286,
+      "rightIndexCurl": 82.7578633626302,
+      "rightMiddleCurl": 70.06310653686523,
+      "rightRingCurl": 68.27143096923828,
+      "rightPinkyCurl": 68.40545272827148,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.6206896551724138,
+      "leftWristPos": {
+        "x": -0.07376884420712788,
+        "y": 1.0450684229532878,
+        "z": 0.3688158094882965
+      },
+      "leftElbowHint": {
+        "x": -0.4185344974199931,
+        "y": 1.0880420605341594,
+        "z": -0.10953643421332042
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.05282618726293246,
+        "y": 1.0560394724210103,
+        "z": 0.38834915558497113
+      },
+      "rightElbowHint": {
+        "x": 0.40388641754786175,
+        "y": 1.0654412905375164,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 44.32507451375326,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 76.77352650960286,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.6551724137931034,
+      "leftWristPos": {
+        "x": -0.10134033610423406,
+        "y": 0.9300820628801981,
+        "z": 0.3168856004873912
+      },
+      "leftElbowHint": {
+        "x": -0.4158099095026652,
+        "y": 1.089738090833028,
+        "z": -0.12613208343585333
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.08540695160627365,
+        "y": 0.9319719473520914,
+        "z": 0.35600583751996356
+      },
+      "rightElbowHint": {
+        "x": 0.41550155480702716,
+        "y": 1.062219262123108,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.6896551724137931,
+      "leftWristPos": {
+        "x": -0.1442145804564158,
+        "y": 0.8448015054066976,
+        "z": 0.25585020581881207
+      },
+      "leftElbowHint": {
+        "x": -0.40563056866327923,
+        "y": 1.0913865963617961,
+        "z": -0.14362019300460815
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.1380100635190805,
+        "y": 0.8283506035804749,
+        "z": 0.32257084051767987
+      },
+      "rightElbowHint": {
+        "x": 0.4177586038907369,
+        "y": 1.0617478688557942,
+        "z": -0.10000000149011612
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.7241379310344828,
+      "leftWristPos": {
+        "x": -0.17712723712126413,
+        "y": 0.7888181606928507,
+        "z": 0.21254217127958933
+      },
+      "leftElbowHint": {
+        "x": -0.39587634801864624,
+        "y": 1.0835028489430745,
+        "z": -0.15329336623350778
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.19627313315868378,
+        "y": 0.7594542105992635,
+        "z": 0.29358814160029095
+      },
+      "rightElbowHint": {
+        "x": 0.41919424136479694,
+        "y": 1.0522154966990154,
+        "z": -0.10358581443627675
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.7586206896551724,
+      "leftWristPos": {
+        "x": -0.19138947625954947,
+        "y": 0.8005111217498779,
+        "z": 0.19363634288311005
+      },
+      "leftElbowHint": {
+        "x": -0.38200103243192035,
+        "y": 1.0868275165557861,
+        "z": -0.15730656683444977
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.22030204037825266,
+        "y": 0.7642561793327332,
+        "z": 0.293376346429189
+      },
+      "rightElbowHint": {
+        "x": 0.41097524762153625,
+        "y": 1.0568124055862427,
+        "z": -0.10358581443627675
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.7931034482758621,
+      "leftWristPos": {
+        "x": -0.19110897183418274,
+        "y": 0.8003642956415812,
+        "z": 0.18924194077650705
+      },
+      "leftElbowHint": {
+        "x": -0.3780115743478139,
+        "y": 1.0871517260869343,
+        "z": -0.15754578014214835
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.2236832727988561,
+        "y": 0.7682995200157166,
+        "z": 0.2920203010241191
+      },
+      "rightElbowHint": {
+        "x": 0.40680283308029175,
+        "y": 1.0592869520187378,
+        "z": -0.10358581443627675
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.8275862068965517,
+      "leftWristPos": {
+        "x": -0.18280556797981262,
+        "y": 0.8233152230580648,
+        "z": 0.19963337977727255
+      },
+      "leftElbowHint": {
+        "x": -0.3750160038471222,
+        "y": 1.091556986172994,
+        "z": -0.1472887396812439
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.22198165953159332,
+        "y": 0.7815607190132141,
+        "z": 0.2836124499638875
+      },
+      "rightElbowHint": {
+        "x": 0.40245940287907916,
+        "y": 1.0688849687576294,
+        "z": -0.11299894750118256
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.8620689655172413,
+      "leftWristPos": {
+        "x": -0.17029507458209991,
+        "y": 0.8580449223518372,
+        "z": 0.20649540424346924
+      },
+      "leftElbowHint": {
+        "x": -0.3725624481836955,
+        "y": 1.0971500873565674,
+        "z": -0.14165069659550986
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.2179412990808487,
+        "y": 0.8059407273928324,
+        "z": 0.27513934175173443
+      },
+      "rightElbowHint": {
+        "x": 0.39782129724820453,
+        "y": 1.0806042750676472,
+        "z": -0.1189825211962064
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.896551724137931,
+      "leftWristPos": {
+        "x": -0.1552418569723765,
+        "y": 0.8975976705551147,
+        "z": 0.20338249703248343
+      },
+      "leftElbowHint": {
+        "x": -0.3688097794850667,
+        "y": 1.1047179301579793,
+        "z": -0.14253661533196768
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.21226325631141663,
+        "y": 0.8342224359512329,
+        "z": 0.2707745333512624
+      },
+      "rightElbowHint": {
+        "x": 0.3925766348838806,
+        "y": 1.0935591856638591,
+        "z": -0.12091875076293945
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.9310344827586207,
+      "leftWristPos": {
+        "x": -0.1486291984717051,
+        "y": 0.9085932572682699,
+        "z": 0.2043849527835846
+      },
+      "leftElbowHint": {
+        "x": -0.36767346660296124,
+        "y": 1.107298731803894,
+        "z": -0.1489905615647634
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.2081240713596344,
+        "y": 0.8296541174252828,
+        "z": 0.2815432647864024
+      },
+      "rightElbowHint": {
+        "x": 0.391687552134196,
+        "y": 1.093579888343811,
+        "z": -0.10945823788642883
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 0.9655172413793104,
+      "leftWristPos": {
+        "x": -0.14925172924995422,
+        "y": 0.8802693088849386,
+        "z": 0.2015672872463862
+      },
+      "leftElbowHint": {
+        "x": -0.36748753984769184,
+        "y": 1.1042517026265461,
+        "z": -0.1517039438088735
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.20757269859313965,
+        "y": 0.8050598700841268,
+        "z": 0.2833890914916992
+      },
+      "rightElbowHint": {
+        "x": 0.39387257893880206,
+        "y": 1.0854510466257732,
+        "z": -0.10470189899206161
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    },
+    {
+      "time": 1.0,
+      "leftWristPos": {
+        "x": -0.15118733048439026,
+        "y": 0.8650169670581818,
+        "z": 0.20516498386859894
+      },
+      "leftElbowHint": {
+        "x": -0.36780767142772675,
+        "y": 1.1022945642471313,
+        "z": -0.14963605254888535
+      },
+      "leftWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "leftThumbCurl": 65.0,
+      "leftIndexCurl": 85.0,
+      "leftMiddleCurl": 85.0,
+      "leftRingCurl": 85.0,
+      "leftPinkyCurl": 85.0,
+      "leftHandActive": true,
+      "rightWristPos": {
+        "x": 0.2082204893231392,
+        "y": 0.7824323773384094,
+        "z": 0.2838174104690552
+      },
+      "rightElbowHint": {
+        "x": 0.39550384879112244,
+        "y": 1.078513741493225,
+        "z": -0.1041485033929348
+      },
+      "rightWristRot": {
+        "x": 0.0,
+        "y": 0.0,
+        "z": 0.0,
+        "w": 1.0
+      },
+      "rightThumbCurl": 65.0,
+      "rightIndexCurl": 85.0,
+      "rightMiddleCurl": 85.0,
+      "rightRingCurl": 85.0,
+      "rightPinkyCurl": 85.0,
+      "rightHandActive": true
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
-
 import vocabData from "./vocab.json";
+import { Unity, useUnityContext } from "react-unity-webgl";
 import "./App.css";
 
 // MediaPipe is loaded as scripts from index.html
@@ -80,7 +80,61 @@ function App() {
   const isInferringRef = useRef(false);
   const holisticRef = useRef<any>(null);
 
-  // The rolling coordinate buffer (State Space S_t)
+  // Setup Unity WebGL Context
+  const { unityProvider, sendMessage, addEventListener, removeEventListener } = useUnityContext({
+    loaderUrl: "/Build/public.loader.js",
+    dataUrl: "/Build/public.data.gz",
+    frameworkUrl: "/Build/public.framework.js.gz",
+    codeUrl: "/Build/public.wasm.gz",
+  });
+
+  const [currentSignCaption, setCurrentSignCaption] = useState("");
+
+  // Listen for the two-way bridge events sent from the C# Avatar!
+  useEffect(() => {
+    const handleSignStarted = (signName: string) => {
+      console.log("Avatar started signing:", signName);
+      setCurrentSignCaption(signName);
+    };
+    const handleSignStopped = () => {
+      console.log("Avatar stopped signing.");
+      setCurrentSignCaption("");
+    };
+
+    addEventListener("OnSignStarted", handleSignStarted);
+    addEventListener("OnSignStopped", handleSignStopped);
+    return () => {
+      removeEventListener("OnSignStarted", handleSignStarted);
+      removeEventListener("OnSignStopped", handleSignStopped);
+    };
+  }, [addEventListener, removeEventListener]);
+
+  // Keep a live reference to sendMessage so the microphone callback always has the latest bridge!
+  const sendMessageRef = useRef(sendMessage);
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  }, [sendMessage]);
+
+  // Forcefully stop Unity from stealing global keystrokes!
+  useEffect(() => {
+    const stopUnityKeyboard = (e: KeyboardEvent) => {
+      if (document.activeElement?.tagName === 'INPUT') {
+        e.stopImmediatePropagation();
+      }
+    };
+    // Capture phase (true) ensures this runs BEFORE Unity's Emscripten listeners!
+    window.addEventListener('keydown', stopUnityKeyboard, true);
+    window.addEventListener('keyup', stopUnityKeyboard, true);
+    window.addEventListener('keypress', stopUnityKeyboard, true);
+    
+    return () => {
+      window.removeEventListener('keydown', stopUnityKeyboard, true);
+      window.removeEventListener('keyup', stopUnityKeyboard, true);
+      window.removeEventListener('keypress', stopUnityKeyboard, true);
+    };
+  }, []);
+
+  // The rolling 30-frame coordinate buffer (State Space S_t)
   const stateBufferRef = useRef<number[][]>([]);
   const isRecordingRef = useRef(false);
   const recordBufferRef = useRef<number[][]>([]);
@@ -317,6 +371,123 @@ function App() {
     }
   }, [activeChannel]);
 
+  const [textInput, setTextInput] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const silenceTimerRef = useRef<any>(null);
+  const intentionallyListeningRef = useRef<boolean>(false);
+
+  // Helper to format text and preserve ISL multi-word phrases!
+  const formatISLSentence = (text: string) => {
+    let formatted = text
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(' ');
+
+    const islPhrases = [
+      "Good Morning", "How Are You", "Small Little", "Store Or Shop",
+      "Street Or Road", "Thank You", "Train Station", "Train Ticket"
+    ];
+    
+    islPhrases.forEach(phrase => {
+      formatted = formatted.replace(new RegExp(phrase, 'gi'), phrase.replace(/ /g, ""));
+    });
+    
+    return formatted;
+  };
+
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition && !recognitionRef.current) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        let fullTranscript = "";
+        for (let i = 0; i < event.results.length; i++) {
+          fullTranscript += event.results[i][0].transcript;
+        }
+        setTextInput(fullTranscript);
+
+        if (silenceTimerRef.current) clearTimeout(silenceTimerRef.current);
+        
+        silenceTimerRef.current = setTimeout(() => {
+          if (fullTranscript.trim()) {
+            const formattedSpeech = formatISLSentence(fullTranscript.trim());
+
+            console.log("Voice-Activation Triggered:", formattedSpeech);
+            sendMessageRef.current("ISL_AvatarRig", "PlaySentence", formattedSpeech);
+            setTextInput(""); 
+            
+            recognition.stop();
+          }
+        }, 1500); 
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error", event.error);
+        if (event.error !== 'aborted') {
+          intentionallyListeningRef.current = false;
+          setIsListening(false);
+        }
+      };
+
+      recognition.onend = () => {
+        // If we still want to be listening (e.g. we just rebooted it), turn it back on!
+        if (intentionallyListeningRef.current) {
+          try {
+            recognition.start();
+          } catch (e) { }
+        } else {
+          setIsListening(false);
+        }
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const handleSendToUnity = async () => {
+    if (!textInput.trim()) return;
+    
+    // Stop listening when sending manually
+    if (isListening && recognitionRef.current) {
+      intentionallyListeningRef.current = false;
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
+
+    const formattedSentence = formatISLSentence(textInput);
+
+    console.log("Sent to Unity WebGL:", formattedSentence);
+    sendMessageRef.current("ISL_AvatarRig", "PlaySentence", formattedSentence);
+    setTextInput(""); 
+  };
+
+  const handleVoiceInput = () => {
+    if (!recognitionRef.current) {
+      alert("Your browser does not support Web Speech API. Please use Chrome or Edge.");
+      return;
+    }
+
+    if (isListening) {
+      intentionallyListeningRef.current = false;
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setTextInput(""); // Clear before speaking
+      intentionallyListeningRef.current = true;
+      try {
+        recognitionRef.current.start();
+      } catch (err) {
+        console.warn("Speech recognition is already running in the background.");
+      }
+      setIsListening(true);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       <nav className="sidebar">
@@ -372,13 +543,52 @@ function App() {
           </div>
         ) : (
           <div className="channel-view">
-            <h3>Channel 2: Rendering Layer</h3>
-            <div className="input-console">
-              <input type="text" placeholder="Type or speak a message..." />
-              <button>Send to Avatar</button>
+            <div className="header-row">
+              <h3>Channel 2: XR Rendering Engine</h3>
+              <div className="status-badge">🟢 Engine Online</div>
             </div>
+
+            <div className="input-console">
+              <input 
+                type="text" 
+                className="modern-input"
+                placeholder="Type a sentence to translate (e.g. 'Hello how are you')..." 
+                value={textInput}
+                onChange={(e) => setTextInput(e.target.value)}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                  if (e.key === 'Enter') handleSendToUnity();
+                }}
+                onKeyUp={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
+                onKeyPress={(e) => {
+                  e.stopPropagation();
+                  e.nativeEvent.stopImmediatePropagation();
+                }}
+              />
+              <button className="modern-button send-btn" onClick={handleSendToUnity}>
+                <span className="btn-icon">✨</span> Send to Avatar
+              </button>
+              <button 
+                className={`modern-button mic-button ${isListening ? 'active-mic' : ''}`}
+                onClick={handleVoiceInput}
+              >
+                {isListening ? "🎙️ Listening..." : "🎙️ Voice Input"}
+              </button>
+            </div>
+
             <div className="avatar-placeholder">
-              <p>3D Avatar Animation Will Render Here</p>
+              <Unity unityProvider={unityProvider} style={{ width: "100%", height: "100%", display: "block" }} />
+              
+              {/* Dynamic VR Caption Overlay */}
+              {currentSignCaption && (
+                <div className="cinematic-caption">
+                  {currentSignCaption}
+                </div>
+              )}
             </div>
           </div>
         )}
