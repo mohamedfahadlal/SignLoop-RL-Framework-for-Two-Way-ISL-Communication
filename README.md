@@ -8,7 +8,7 @@
 [![MediaPipe](https://img.shields.io/badge/MediaPipe-0.10.14-orange.svg)](https://mediapipe.dev/)
 [![Version Control](https://img.shields.io/badge/Git%20LFS-Enabled-brightgreen.svg)](https://git-lfs.github.com/)
 
-**SignLoop** is a two-way, 100% offline **Indian Sign Language (ISL) Virtual Reality Communication System** targeted for the **Meta Quest 3 (Horizon OS)**. It bridges communication between Deaf / Hard-of-Hearing signers and non-signing hearing individuals in shared virtual environments without requiring cloud connectivity.
+**SignLoop** is a two-way, 100% offline **Indian Sign Language (ISL) Virtual Reality Communication System**. It bridges communication between Deaf / Hard-of-Hearing signers and non-signing hearing individuals in shared virtual environments without requiring cloud connectivity.
 
 ---
 
